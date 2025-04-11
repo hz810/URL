@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宏仔URL 编码转换器</title>
+</head>
+<body>
+    <h1>宏仔文字转 URL 编码</h1>
+    <label for="inputText">输入文字：</label>
+    <input type="text" id="inputText" placeholder="输入需要转换的文字">
+    <button onclick="encodeText()">转换为 URL 编码</button>
+    <p>转换结果：<span id="outputText"></span></p>
+ 
+    <script>
+        function encodeText() {
+            const inputText = document.getElementById('inputText').value;
+            const encodedText = encodeURIComponent(inputText);
+            document.getElementById('outputText').textContent = encodedText;
+        }
+    </script>
+</body>
+</html>
