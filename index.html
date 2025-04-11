@@ -3,137 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宏仔智能URL编码链</title>
+    <title>宏仔智能编码工具</title>
+     <body background="//img20.360buyimg.com/openfeedback/jfs/t1/282207/8/18075/2196887/67f8ff1aF3ac94d33/4c5b709bf494e124.jpg">
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 20px auto;
             padding: 0 20px;
+            background-color: #f5f5f5;
         }
-        .processing-chain {
-            display: grid;
-            gap: 0px;
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            /* padding-bottom: 15px; */
+            /* border-bottom: 3px solid #3498db; */
         }
-        .stage {
-            padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-        .stage.active {
-            border-color: #007bff;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.1);
-        }
-        h2 {
-            color: #444;
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+        .converter-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 25px 0;
         }
         .input-group {
             margin: 20px 0;
         }
         input {
-            width: 94%;
-            padding: 12px;
-            border: 2px solid #ddd;
+            width: 88%;
+            padding: 12px 15px;
+            border: 2px solid #bdc3c7;
             border-radius: 6px;
             font-size: 16px;
+            transition: border-color 0.3s;
         }
         input:focus {
-            border-color: #007bff;
+            border-color: #3498db;
             outline: none;
         }
         button {
-            padding: 12px 24px;
-            background: #007bff;
-            color: white;
+            padding: 12px 25px;
+            margin-top: 10px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background 0.3s;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.3s;
         }
-        button:hover {
-            background: #0056b3;
+        #encodeBtn {
+            background: #3498db;
+            color: white;
         }
-        .result {
-            margin-top: 15px;
+        #encodeBtn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        .result-box {
+            margin-top: 25px;
             padding: 15px;
             background: #f8f9fa;
-            border-radius: 6px;
-            word-break: break-all;
+            border-radius: 8px;
+            position: relative;
         }
-        .arrow {
+        .copy-btn {
+            background: #2ecc71;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .copy-btn:hover {
+            background: #27ae60;
+        }
+        .copied-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ecc71;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+        }
+        .copied-alert.show {
+            opacity: 1;
+        }
+        .stage-arrow {
             text-align: center;
             font-size: 24px;
-            color: #666;
-            margin: 10px 0;
+            color: #7f8c8d;
+            margin: 15px 0;
         }
     </style>
 </head>
 <body>
-    <h1>🔗 宏仔智能编码链</h1>
-    
-    <div class="processing-chain">
-        <!-- 第一级编码 -->
-        <div class="stage active">
-            <h2>🔠 原始内容输入</h2>
-            <div class="input-group">
-                <input type="text" id="sourceInput" placeholder="输入原始文本内容">
-                <button onclick="processFirstStage()">开始编码</button>
-            </div>
-            <div class="result" id="firstResult"></div>
+    <h1>宏仔智能编码工具</h1>
+
+    <div class="converter-box">
+        <div class="input-group">
+            <input type="text" id="sourceInput" placeholder="请输入要编码的原始内容">
+            <button id="encodeBtn" onclick="startEncoding()">开始编码</button>
         </div>
 
-        <div class="arrow">↓</div>
+        <div class="stage-arrow">↓ 首次编码结果 ↓</div>
+        <div class="result-box">
+            <div id="firstResult"></div>
+            <div class="copy-btn" onclick="copyResult('first')">复制首次结果</div>
+        </div>
 
-        <!-- 第二级编码 -->
-        <div class="stage">
-            <h2>🔄 自动二次编码</h2>
-            <div class="input-group">
-                <input type="text" id="autoEncodeInput" readonly>
-            </div>
-            <div class="result" id="finalResult"></div>
+        <div class="stage-arrow">↓ 最终编码结果 ↓</div>
+        <div class="result-box">
+            <div id="finalResult"></div>
+            <div class="copy-btn" onclick="copyResult('final')">复制最终结果</div>
         </div>
     </div>
 
+    <div class="copied-alert" id="copyAlert">✓ 已复制到剪贴板！</div>
+
     <script>
-        function processFirstStage() {
-            // 获取原始输入
-            const rawText = document.getElementById('sourceInput').value;
+        // 编码处理函数
+        function startEncoding() {
+            const rawText = document.getElementById('sourceInput').value.trim();
             
+            if (!rawText) {
+                alert('请输入要编码的内容');
+                return;
+            }
+
             // 第一次编码
-            const firstEncode = encodeURIComponent(rawText);
-            document.getElementById('firstResult').innerHTML = 
-                `<strong>首次编码：</strong><code>${firstEncode}</code>`;
-            
-            // 自动传递到第二级
-            const secondInput = document.getElementById('autoEncodeInput');
-            secondInput.value = firstEncode;
-            
-            // 自动触发二次编码
-            processSecondStage();
+            const firstEncoded = encodeURIComponent(rawText);
+            showResult('firstResult', '首次编码结果：', firstEncoded);
+
+            // 第二次编码
+            const finalEncoded = encodeURIComponent(firstEncoded);
+            showResult('finalResult', '最终编码结果：', finalEncoded);
         }
 
-        function processSecondStage() {
-            // 获取第一次编码结果
-            const firstResult = document.getElementById('autoEncodeInput').value;
-            
-            // 进行二次编码
-            const finalEncode = encodeURIComponent(firstResult);
-            document.getElementById('finalResult').innerHTML = 
-                `<strong>最终结果：</strong><code>${finalEncode}</code>`;
-            
-            // 可选：自动复制到剪贴板
-            navigator.clipboard.writeText(finalEncode).then(() => {
-                console.log('结果已自动复制');
-            });
+        // 显示结果函数
+        function showResult(containerId, title, content) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <strong>${title}</strong><br>
+                <code style="word-break: break-all; display: inline-block; margin-top: 10px;">${content}</code>
+            `;
         }
 
-        // 输入框回车支持
-        document.getElementById('sourceInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') processFirstStage();
+        // 通用复制函数
+        function copyResult(type) {
+            const targetId = type === 'first' ? 'firstResult' : 'finalResult';
+            const content = document.querySelector(`#${targetId} code`).textContent;
+            const copyAlert = document.getElementById('copyAlert');
+
+            // 兼容性处理
+            const fallbackCopy = text => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    return true;
+                } catch (err) {
+                    return false;
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            };
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(content).then(() => {
+                    showCopyAlert();
+                }).catch(() => {
+                    if (!fallbackCopy(content)) {
+                        alert('自动复制失败，请手动复制');
+                    }
+                });
+            } else {
+                if (fallbackCopy(content)) {
+                    showCopyAlert();
+                } else {
+                    alert('浏览器不支持自动复制，请手动选择复制');
+                }
+            }
+
+            function showCopyAlert() {
+                copyAlert.classList.add('show');
+                setTimeout(() => {
+                    copyAlert.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        // 回车键支持
+        document.getElementById('sourceInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') startEncoding();
         });
     </script>
 </body>
