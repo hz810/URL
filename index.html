@@ -1,23 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宏仔URL 编码转换器</title>
+    <title>宏仔智能URL编码链</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .processing-chain {
+            display: grid;
+            gap: 0px;
+        }
+        .stage {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .stage.active {
+            border-color: #007bff;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.1);
+        }
+        h2 {
+            color: #444;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        input {
+            width: 94%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 24px;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>宏仔文字转 URL 编码</h1>
-    <label for="inputText">输入文字：</label>
-    <input type="text" id="inputText" placeholder="输入需要转换的文字">
-    <button onclick="encodeText()">转换为 URL 编码</button>
-    <p>转换结果：<span id="outputText"></span></p>
- 
+    <h1>🔗 宏仔智能编码链</h1>
+    
+    <div class="processing-chain">
+        <!-- 第一级编码 -->
+        <div class="stage active">
+            <h2>🔠 原始内容输入</h2>
+            <div class="input-group">
+                <input type="text" id="sourceInput" placeholder="输入原始文本内容">
+                <button onclick="processFirstStage()">开始编码</button>
+            </div>
+            <div class="result" id="firstResult"></div>
+        </div>
+
+        <div class="arrow">↓</div>
+
+        <!-- 第二级编码 -->
+        <div class="stage">
+            <h2>🔄 自动二次编码</h2>
+            <div class="input-group">
+                <input type="text" id="autoEncodeInput" readonly>
+            </div>
+            <div class="result" id="finalResult"></div>
+        </div>
+    </div>
+
     <script>
-        function encodeText() {
-            const inputText = document.getElementById('inputText').value;
-            const encodedText = encodeURIComponent(inputText);
-            document.getElementById('outputText').textContent = encodedText;
+        function processFirstStage() {
+            // 获取原始输入
+            const rawText = document.getElementById('sourceInput').value;
+            
+            // 第一次编码
+            const firstEncode = encodeURIComponent(rawText);
+            document.getElementById('firstResult').innerHTML = 
+                `<strong>首次编码：</strong><code>${firstEncode}</code>`;
+            
+            // 自动传递到第二级
+            const secondInput = document.getElementById('autoEncodeInput');
+            secondInput.value = firstEncode;
+            
+            // 自动触发二次编码
+            processSecondStage();
         }
+
+        function processSecondStage() {
+            // 获取第一次编码结果
+            const firstResult = document.getElementById('autoEncodeInput').value;
+            
+            // 进行二次编码
+            const finalEncode = encodeURIComponent(firstResult);
+            document.getElementById('finalResult').innerHTML = 
+                `<strong>最终结果：</strong><code>${finalEncode}</code>`;
+            
+            // 可选：自动复制到剪贴板
+            navigator.clipboard.writeText(finalEncode).then(() => {
+                console.log('结果已自动复制');
+            });
+        }
+
+        // 输入框回车支持
+        document.getElementById('sourceInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') processFirstStage();
+        });
     </script>
 </body>
 </html>
