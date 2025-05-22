@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宏仔MD5密码生成器</title>
+    <body background="//img20.360buyimg.com/openfeedback/jfs/t1/282207/8/18075/2196887/67f8ff1aF3ac94d33/4c5b709bf494e124.jpg">
+    <style>
+        :root {
+            --primary-color: #4a6bdf;
+            --secondary-color: #6c5ce7;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .container:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        h1 {
+            color: var(--dark-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 107, 223, 0.2);
+        }
+        
+        .result-container {
+            position: relative;
+            margin-top: 30px;
+        }
+        
+        .result-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .copy-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .copy-btn i {
+            margin-right: 5px;
+        }
+        
+        .result-box {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            word-break: break-all;
+            min-height: 50px;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 107, 223, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>宏仔MD5密码生成器</h1>
+        
+        <div class="input-group">
+            <label for="input-password">输入密码 (可选)</label>
+            <input type="password" id="input-password" placeholder="输入额外的密码...">
+        </div>
+        
+        <button id="generate-btn" class="btn">生成MD5哈希值</button>
+        
+        <div class="result-container">
+            <div class="result-label">
+                <label for="result">MD5结果</label>
+                <button id="copy-btn" class="copy-btn">
+                    <i>📋</i>复制
+                </button>
+            </div>
+            <div id="result" class="result-box"></div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        已复制到剪贴板!
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputPassword = document.getElementById('input-password');
+            const generateBtn = document.getElementById('generate-btn');
+            const resultBox = document.getElementById('result');
+            const copyBtn = document.getElementById('copy-btn');
+            const notification = document.getElementById('notification');
+            
+            // 生成MD5哈希
+            generateBtn.addEventListener('click', function() {
+                const password = inputPassword.value.trim();
+                
+                if (!password) {
+                    alert('请输入密码!');
+                    inputPassword.focus();
+                    return;
+                }
+                
+                let hash = CryptoJS.MD5(password).toString();
+                resultBox.textContent = hash;
+            });
+            
+            // 复制结果
+            copyBtn.addEventListener('click', function() {
+                if (!resultBox.textContent) {
+                    alert('没有可复制的内容!');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(resultBox.textContent)
+                    .then(() => {
+                        showNotification();
+                    })
+                    .catch(err => {
+                        console.error('复制失败:', err);
+                        alert('复制失败，请手动选择文本复制。');
+                    });
+            });
+            
+            // 显示通知
+            function showNotification() {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 2000);
+            }
+            
+            // 按Enter键生成
+            inputPassword.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    generateBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
