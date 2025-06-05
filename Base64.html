@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宏仔Base64 图片在线转换工具</title>
+    <body background="//img20.360buyimg.com/openfeedback/jfs/t1/282207/8/18075/2196887/67f8ff1aF3ac94d33/4c5b709bf494e124.jpg">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .section {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 15px 0;
+            border: 1px dashed #ccc;
+            display: none;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .file-input {
+            margin: 15px 0;
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .file-input:hover {
+            background-color: #f0f0f0;
+        }
+        .copy-btn {
+            background-color: #2ecc71;
+            margin-left: 10px;
+        }
+        .copy-btn:hover {
+            background-color: #27ae60;
+        }
+        .clear-btn {
+            background-color: #e74c3c;
+        }
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        .drop-area {
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .drop-area.highlight {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        .info-text {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: fadeInOut 3s ease-in-out forwards;
+            display: none;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast">复制成功！</div>
+    
+    <h1>宏仔Base64 图片在线转换工具</h1>
+    <div class="container">
+        <div class="section">
+            <h2 class="section-title">宏仔图片转Base64</h2>
+            <div id="dropArea" class="drop-area">
+                <p>拖放图片到此处或点击选择文件</p>
+                <p class="info-text">支持 JPG, PNG, GIF 等图片格式</p>
+                <input type="file" id="imageUpload" class="file-input" accept="image/*" style="display: none;">
+            </div>
+            <textarea id="base64Output" placeholder="Base64编码将自动显示在这里..." readonly></textarea>
+            <div class="btn-group">
+                <button id="copyBase64Btn" class="copy-btn">复制Base64</button>
+                <button id="clearAllBtn" class="clear-btn">清除所有</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Base64转图片预览</h2>
+            <img id="imagePreview" class="preview" alt="图片预览">
+            <p id="previewInfo" class="info-text" style="display: none;">这是从上方Base64编码还原的图片</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const imageUpload = document.getElementById('imageUpload');
+            const dropArea = document.getElementById('dropArea');
+            const base64Output = document.getElementById('base64Output');
+            const copyBase64Btn = document.getElementById('copyBase64Btn');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewInfo = document.getElementById('previewInfo');
+            const toast = document.getElementById('toast');
+
+            // 显示Toast提示
+            function showToast(message) {
+                toast.textContent = message;
+                toast.style.display = 'block';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            }
+
+            // 点击拖放区域触发文件选择
+            dropArea.addEventListener('click', function() {
+                imageUpload.click();
+            });
+
+            // 文件选择变化时自动处理
+            imageUpload.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    processImage(this.files[0]);
+                }
+            });
+
+            // 处理图片文件
+            function processImage(file) {
+                if (!file.type.match('image.*')) {
+                    showToast('请选择图片文件');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64String = e.target.result;
+                    base64Output.value = base64String;
+                    imagePreview.src = base64String;
+                    imagePreview.style.display = 'block';
+                    previewInfo.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 复制Base64
+            copyBase64Btn.addEventListener('click', function() {
+                if (!base64Output.value) {
+                    showToast('没有可复制的内容');
+                    return;
+                }
+                
+                base64Output.select();
+                document.execCommand('copy');
+                showToast('复制成功！');
+            });
+
+            // 清除所有
+            clearAllBtn.addEventListener('click', function() {
+                imageUpload.value = '';
+                base64Output.value = '';
+                imagePreview.src = '';
+                imagePreview.style.display = 'none';
+                previewInfo.style.display = 'none';
+            });
+
+            // 拖放功能
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropArea.classList.add('highlight');
+            }
+
+            function unhighlight() {
+                dropArea.classList.remove('highlight');
+            }
+
+            dropArea.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    processImage(files[0]);
+                }
+            });
+
+            // 当Base64编码手动修改时也更新图片预览
+            base64Output.addEventListener('input', function() {
+                const base64String = this.value.trim();
+                if (base64String.startsWith('data:image/')) {
+                    imagePreview.src = base64String;
+                    imagePreview.style.display = 'block';
+                    previewInfo.style.display = 'block';
+                } else if (base64String === '') {
+                    imagePreview.src = '';
+                    imagePreview.style.display = 'none';
+                    previewInfo.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
