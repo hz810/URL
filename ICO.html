@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宏仔图片与ICO图标转换工具</title>
+		<link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
+		type="image/x-icon">
+		<body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        .converter-section {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .drop-area {
+            border: 2px dashed #ccc;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .drop-area.highlight {
+            border-color: #4CAF50;
+            background-color: #f0fff0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .preview {
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .preview img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        .size-options {
+            margin: 15px 0;
+        }
+        .size-options label {
+            margin-right: 15px;
+        }
+        .download-btn {
+            display: none;
+            margin-top: 15px;
+        }
+        .download-links {
+            margin-top: 15px;
+        }
+        .download-links a {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>宏仔图片与ICO图标转换工具</h1>
+    
+    <div class="converter-section">
+        <h2>PNG/JPG 转 ICO</h2>
+        <p>将普通图片转换为Windows图标文件(.ico)</p>
+        
+        <div id="pngToIcoDropArea" class="drop-area">
+            <p>拖放图片文件到这里，或点击选择文件</p>
+            <input type="file" id="pngToIcoInput" accept="image/png,image/jpeg" style="display: none;">
+        </div>
+        
+        <div class="size-options">
+            <p>选择图标尺寸:</p>
+            <label><input type="checkbox" name="icoSize" value="16" checked> 16x16</label>
+            <label><input type="checkbox" name="icoSize" value="32" checked> 32x32</label>
+            <label><input type="checkbox" name="icoSize" value="48" checked> 48x48</label>
+            <label><input type="checkbox" name="icoSize" value="64"> 64x64</label>
+            <label><input type="checkbox" name="icoSize" value="128"> 128x128</label>
+            <label><input type="checkbox" name="icoSize" value="256"> 256x256</label>
+        </div>
+        
+        <div class="preview-container" id="pngToIcoPreview"></div>
+        
+        <button id="convertToIcoBtn" disabled>转换为ICO</button>
+        <div id="icoDownloadContainer" class="download-links"></div>
+    </div>
+    
+    <div class="converter-section">
+        <h2>ICO 转 PNG</h2>
+        <p>将Windows图标文件(.ico)转换为PNG图片</p>
+        
+        <div id="icoToPngDropArea" class="drop-area">
+            <p>拖放ICO文件到这里，或点击选择文件</p>
+            <input type="file" id="icoToPngInput" accept=".ico" style="display: none;">
+        </div>
+        
+        <div class="preview-container" id="icoToPngPreview"></div>
+        
+        <button id="convertToPngBtn" disabled>转换为PNG</button>
+        <div id="pngDownloadContainer" class="download-links"></div>
+    </div>
+    
+    <script>
+        // PNG/JPG 转 ICO 功能
+        const pngToIcoDropArea = document.getElementById('pngToIcoDropArea');
+        const pngToIcoInput = document.getElementById('pngToIcoInput');
+        const pngToIcoPreview = document.getElementById('pngToIcoPreview');
+        const convertToIcoBtn = document.getElementById('convertToIcoBtn');
+        const icoDownloadContainer = document.getElementById('icoDownloadContainer');
+        
+        let pngToIcoFile = null;
+        
+        // 拖放事件处理
+        pngToIcoDropArea.addEventListener('click', () => pngToIcoInput.click());
+        pngToIcoDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pngToIcoDropArea.classList.add('highlight');
+        });
+        pngToIcoDropArea.addEventListener('dragleave', () => {
+            pngToIcoDropArea.classList.remove('highlight');
+        });
+        pngToIcoDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pngToIcoDropArea.classList.remove('highlight');
+            
+            if (e.dataTransfer.files.length) {
+                handlePngToIcoFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        pngToIcoInput.addEventListener('change', () => {
+            if (pngToIcoInput.files.length) {
+                handlePngToIcoFile(pngToIcoInput.files[0]);
+            }
+        });
+        
+        function handlePngToIcoFile(file) {
+            if (!file.type.match('image.*')) {
+                alert('请选择有效的图片文件');
+                return;
+            }
+            
+            pngToIcoFile = file;
+            
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                pngToIcoPreview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'preview';
+                previewDiv.appendChild(img);
+                pngToIcoPreview.appendChild(previewDiv);
+                
+                convertToIcoBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        convertToIcoBtn.addEventListener('click', async () => {
+            if (!pngToIcoFile) return;
+            
+            // 获取选中的尺寸
+            const selectedSizes = [];
+            document.querySelectorAll('input[name="icoSize"]:checked').forEach(checkbox => {
+                selectedSizes.push(parseInt(checkbox.value));
+            });
+            
+            if (selectedSizes.length === 0) {
+                alert('请至少选择一个图标尺寸');
+                return;
+            }
+            
+            icoDownloadContainer.innerHTML = '';
+            
+            // 创建Canvas并绘制图像
+            const img = await loadImage(pngToIcoFile);
+            
+            // 为每个选中的尺寸创建单独的ICO文件
+            for (const size of selectedSizes) {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // 保持宽高比绘制图像
+                const ratio = Math.min(size / img.width, size / img.height);
+                const width = img.width * ratio;
+                const height = img.height * ratio;
+                const x = (size - width) / 2;
+                const y = (size - height) / 2;
+                
+                ctx.drawImage(img, x, y, width, height);
+                
+                // 转换为PNG数据
+                const pngData = await new Promise(resolve => {
+                    canvas.toBlob(blob => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(new Uint8Array(reader.result));
+                        reader.readAsArrayBuffer(blob);
+                    }, 'image/png');
+                });
+                
+                // 创建ICO文件(只包含当前尺寸)
+                const icoData = await createSingleSizeIco(pngData, size, size);
+                
+                // 创建下载链接
+                const blob = new Blob([icoData], { type: 'image/x-icon' });
+                const url = URL.createObjectURL(blob);
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = `icon_${size}x${size}.ico`;
+                downloadLink.innerHTML = `<button>下载 ${size}x${size} ICO</button>`;
+                icoDownloadContainer.appendChild(downloadLink);
+                icoDownloadContainer.appendChild(document.createElement('br'));
+            }
+        });
+        
+        // ICO 转 PNG 功能
+        const icoToPngDropArea = document.getElementById('icoToPngDropArea');
+        const icoToPngInput = document.getElementById('icoToPngInput');
+        const icoToPngPreview = document.getElementById('icoToPngPreview');
+        const convertToPngBtn = document.getElementById('convertToPngBtn');
+        const pngDownloadContainer = document.getElementById('pngDownloadContainer');
+        
+        let icoFile = null;
+        
+        // 拖放事件处理
+        icoToPngDropArea.addEventListener('click', () => icoToPngInput.click());
+        icoToPngDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            icoToPngDropArea.classList.add('highlight');
+        });
+        icoToPngDropArea.addEventListener('dragleave', () => {
+            icoToPngDropArea.classList.remove('highlight');
+        });
+        icoToPngDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            icoToPngDropArea.classList.remove('highlight');
+            
+            if (e.dataTransfer.files.length) {
+                handleIcoFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        icoToPngInput.addEventListener('change', () => {
+            if (icoToPngInput.files.length) {
+                handleIcoFile(icoToPngInput.files[0]);
+            }
+        });
+        
+        function handleIcoFile(file) {
+            if (!file.name.toLowerCase().endsWith('.ico')) {
+                alert('请选择有效的ICO文件');
+                return;
+            }
+            
+            icoFile = file;
+            
+            // 尝试解析ICO文件并显示预览
+            parseIcoFile(file).then(images => {
+                icoToPngPreview.innerHTML = '';
+                
+                images.forEach((imgData, index) => {
+                    const img = document.createElement('img');
+                    img.src = imgData.url;
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'preview';
+                    
+                    const sizeText = document.createElement('div');
+                    sizeText.textContent = `${imgData.width}x${imgData.height}`;
+                    
+                    previewDiv.appendChild(img);
+                    previewDiv.appendChild(sizeText);
+                    icoToPngPreview.appendChild(previewDiv);
+                });
+                
+                convertToPngBtn.disabled = false;
+            }).catch(err => {
+                alert('无法解析ICO文件: ' + err.message);
+            });
+        }
+        
+        convertToPngBtn.addEventListener('click', async () => {
+            if (!icoFile) return;
+            
+            try {
+                const images = await parseIcoFile(icoFile);
+                pngDownloadContainer.innerHTML = '';
+                
+                images.forEach((imgData, index) => {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = imgData.url;
+                    downloadLink.download = `icon_${imgData.width}x${imgData.height}.png`;
+                    downloadLink.innerHTML = `<button>下载 ${imgData.width}x${imgData.height} PNG</button>`;
+                    pngDownloadContainer.appendChild(downloadLink);
+                    pngDownloadContainer.appendChild(document.createElement('br'));
+                });
+            } catch (err) {
+                alert('转换失败: ' + err.message);
+            }
+        });
+        
+        // 辅助函数
+        function loadImage(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                    img.onload = () => resolve(img);
+                    img.onerror = () => reject(new Error('无法加载图片'));
+                };
+                
+                reader.onerror = () => reject(new Error('无法读取文件'));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async function createSingleSizeIco(pngData, width, height) {
+            // ICO文件结构:
+            // 6字节头 + 16字节目录 + 图像数据
+            
+            // 计算ICO文件大小
+            const totalSize = 6 + 16 + pngData.length;
+            
+            // 创建缓冲区
+            const buffer = new ArrayBuffer(totalSize);
+            const view = new DataView(buffer);
+            
+            // 写入ICO头
+            view.setUint16(0, 0, true); // 保留字段，必须为0
+            view.setUint16(2, 1, true); // 图像类型，1表示ICO
+            view.setUint16(4, 1, true); // 图像数量(只包含一个)
+            
+            // 写入图像目录
+            view.setUint8(6, width === 256 ? 0 : width); // 宽度
+            view.setUint8(7, height === 256 ? 0 : height); // 高度
+            view.setUint8(8, 0); // 颜色数 (0表示不限制)
+            view.setUint8(9, 0); // 保留字段
+            view.setUint16(10, 1, true); // 颜色平面数
+            view.setUint16(12, 32, true); // 每像素位数
+            view.setUint32(14, pngData.length, true); // 图像数据大小
+            view.setUint32(18, 22, true); // 图像数据偏移(6+16=22)
+            
+            // 写入图像数据
+            const imgData = new Uint8Array(buffer, 22, pngData.length);
+            imgData.set(pngData);
+            
+            return buffer;
+        }
+        
+        function parseIcoFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        const buffer = e.target.result;
+                        const view = new DataView(buffer);
+                        
+                        // 检查ICO文件头
+                        if (view.getUint16(0, true) !== 0 || view.getUint16(2, true) !== 1) {
+                            throw new Error('无效的ICO文件');
+                        }
+                        
+                        const numImages = view.getUint16(4, true);
+                        const images = [];
+                        
+                        // 解析每个图像目录
+                        for (let i = 0; i < numImages; i++) {
+                            const dirOffset = 6 + i * 16;
+                            
+                            const width = view.getUint8(dirOffset) || 256;
+                            const height = view.getUint8(dirOffset + 1) || 256;
+                            const dataSize = view.getUint32(dirOffset + 8, true);
+                            const dataOffset = view.getUint32(dirOffset + 12, true);
+                            
+                            // 提取图像数据
+                            const imgData = new Uint8Array(buffer, dataOffset, dataSize);
+                            
+                            // 创建Blob URL用于预览
+                            const blob = new Blob([imgData], { type: 'image/png' });
+                            const url = URL.createObjectURL(blob);
+                            
+                            images.push({
+                                width,
+                                height,
+                                url
+                            });
+                        }
+                        
+                        resolve(images);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                
+                reader.onerror = () => reject(new Error('无法读取文件'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+    </script>
+</body>
+</html>
