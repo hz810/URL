@@ -5,7 +5,20 @@
 		<title>宏仔站长工具出品，必属精品</title>
 		<link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
 		type="image/x-icon">
-		<body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <script>
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        function setBackground() {
+            const bgUrl = isMobile() ? 
+                'https://pic.rmb.bdstatic.com/bjh/3ee34a2a5f1/250501/81c49366f89b381e8c37762b1b5f48a9.png' :
+                'https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg';
+            
+            document.body.style.backgroundImage = `url(${bgUrl})`;
+        }
+        window.onload = setBackground;
+        window.onresize = setBackground;
+    </script>
 		<style>
 			body{ 
 			margin: 0 auto; padding: 0; font-family: arial; font-size: 16px; padding-left:
@@ -86,3 +99,7 @@
 <img src="img/5.webp">【图片转换ICO图标】图片PNG转换为ICO图标件</a>
 
 </div>
+
+<font color="#000000">
+<font color="#000000">纯净、精简、无广告站长工具</a> | 
+<font color="#000000">邮箱：810331109@qq.com</a></font> 
