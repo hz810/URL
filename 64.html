@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>宏仔Base64 编码解码工具</title>
-		<link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
-		type="image/x-icon">
-		<body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
+    type="image/x-icon">
+    <body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
     <style>
         * {
             box-sizing: border-box;
@@ -24,6 +24,7 @@
         .container {
             max-width: 1000px;
             margin: 0 auto;
+            position: relative;
         }
 
         .tool-box {
@@ -90,6 +91,27 @@
             background-color: #27ae60;
         }
 
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            z-index: 1000;
+            animation: fadeInOut 3s ease-in-out forwards;
+            display: none;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -129,6 +151,8 @@
             </div>
         </div>
     </div>
+
+    <div class="toast" id="toast">已复制到剪贴板！</div>
 
     <script>
         function encode() {
@@ -188,10 +212,20 @@
             output.select();
             try {
                 document.execCommand('copy');
-                alert('已复制到剪贴板！');
+                showToast();
             } catch (err) {
-                alert('复制失败，请手动复制');
+                showToast('复制失败，请手动复制');
             }
+        }
+
+        function showToast(message = '已复制到剪贴板！') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
         }
 
         function clearAll() {
