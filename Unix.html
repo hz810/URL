@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宏仔Unix时间戳转换工具</title>
+		<link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
+		type="image/x-icon">
+		<body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            /*/background-color: #f5f5f5;/*/
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #444;
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .timestamp-display {
+            background-color: #f0f0f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .timestamp-value {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .control-buttons {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .start-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .stop-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .refresh-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .converter-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .time-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .time-unit {
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+        }
+        .time-value {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .convert-btn {
+            background-color: #9b59b6;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .auto-refresh-status {
+            font-style: italic;
+            color: #7f8c8d;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        .datetime-inputs {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .datetime-inputs select, .datetime-inputs input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #eee;
+            border: none;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><center>宏仔Unix时间戳转换工具</center></h1>
+        
+        <div class="timestamp-display">
+            现在的Unix时间戳(Unix timestamp)是：<span class="timestamp-value" id="currentTimestamp">1749233044</span>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="start-btn" onclick="startAutoRefresh()">开始</button>
+            <button class="stop-btn" onclick="stopAutoRefresh()">停止</button>
+            <button class="refresh-btn" onclick="manualRefresh()">刷新</button>
+        </div>
+        
+        <div class="converter-section">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('timestamp-tab')">时间戳转日期</button>
+                <button class="tab-button" onclick="switchTab('datetime-tab')">日期转时间戳</button>
+            </div>
+            
+            <div id="timestamp-tab" class="tab-content active">
+                <div class="input-group">
+                    <label for="inputTimestamp">Unix时间戳（Unix timestamp）</label>
+                    <input type="text" id="inputTimestamp" placeholder="输入Unix时间戳">
+                </div>
+                
+                <button class="convert-btn" onclick="convertTimestampToDate()">转换Unix时间戳</button>
+                
+                <div class="time-display" id="timeDisplay">
+                    <div class="time-unit">
+                        时间 <span class="time-value" id="year">2025</span> 年
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="month">月</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="day">日</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="hour">时</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="minute">分</span>
+                    </div>
+                    <div class="time-unit">
+                        <span class="time-value" id="second">秒</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="datetime-tab" class="tab-content">
+                <div class="datetime-inputs">
+                    <select id="inputYear">
+                        <!-- 年份选项将通过JS动态生成 -->
+                    </select>
+                    <select id="inputMonth">
+                        <option value="1">1月</option>
+                        <option value="2">2月</option>
+                        <option value="3">3月</option>
+                        <option value="4">4月</option>
+                        <option value="5">5月</option>
+                        <option value="6">6月</option>
+                        <option value="7">7月</option>
+                        <option value="8">8月</option>
+                        <option value="9">9月</option>
+                        <option value="10">10月</option>
+                        <option value="11">11月</option>
+                        <option value="12">12月</option>
+                    </select>
+                    <select id="inputDay">
+                        <!-- 日期选项将通过JS动态生成 -->
+                    </select>
+                    <select id="inputHour">
+                        <!-- 小时选项将通过JS动态生成 -->
+                    </select>
+                    <select id="inputMinute">
+                        <!-- 分钟选项将通过JS动态生成 -->
+                    </select>
+                    <select id="inputSecond">
+                        <!-- 秒钟选项将通过JS动态生成 -->
+                    </select>
+                </div>
+                
+                <button class="convert-btn" onclick="convertDateToTimestamp()">转换日期为时间戳</button>
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="outputTimestamp">Unix时间戳结果</label>
+                    <input type="text" id="outputTimestamp" readonly>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auto-refresh-status" id="refreshStatus"></div>
+    </div>
+
+    <script>
+        let refreshInterval;
+        let isAutoRefreshing = false;
+        
+        // 初始化 - 页面加载时自动开始刷新
+        window.onload = function() {
+            startAutoRefresh();
+            generateYearOptions();
+            generateDayOptions();
+            generateTimeOptions();
+            setCurrentDateTime();
+        };
+        
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 取消所有标签按钮的active类
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 设置选中的标签按钮为active
+            event.currentTarget.classList.add('active');
+        }
+        
+        function generateYearOptions() {
+            const yearSelect = document.getElementById('inputYear');
+            const currentYear = new Date().getFullYear();
+            
+            // 生成从当前年份前后各20年的选项
+            for (let year = currentYear - 20; year <= currentYear + 20; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+        }
+        
+        function generateDayOptions() {
+            const daySelect = document.getElementById('inputDay');
+            
+            // 生成1-31日的选项
+            for (let day = 1; day <= 31; day++) {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day + '日';
+                daySelect.appendChild(option);
+            }
+        }
+        
+        function generateTimeOptions() {
+            const hourSelect = document.getElementById('inputHour');
+            const minuteSelect = document.getElementById('inputMinute');
+            const secondSelect = document.getElementById('inputSecond');
+            
+            // 生成0-23小时的选项
+            for (let hour = 0; hour < 24; hour++) {
+                const option = document.createElement('option');
+                option.value = hour;
+                option.textContent = hour.toString().padStart(2, '0') + '时';
+                hourSelect.appendChild(option);
+            }
+            
+            // 生成0-59分钟的选项
+            for (let minute = 0; minute < 60; minute++) {
+                const option = document.createElement('option');
+                option.value = minute;
+                option.textContent = minute.toString().padStart(2, '0') + '分';
+                minuteSelect.appendChild(option);
+            }
+            
+            // 生成0-59秒钟的选项
+            for (let second = 0; second < 60; second++) {
+                const option = document.createElement('option');
+                option.value = second;
+                option.textContent = second.toString().padStart(2, '0') + '秒';
+                secondSelect.appendChild(option);
+            }
+        }
+        
+        function setCurrentDateTime() {
+            const now = new Date();
+            document.getElementById('inputYear').value = now.getFullYear();
+            document.getElementById('inputMonth').value = now.getMonth() + 1;
+            document.getElementById('inputDay').value = now.getDate();
+            document.getElementById('inputHour').value = now.getHours();
+            document.getElementById('inputMinute').value = now.getMinutes();
+            document.getElementById('inputSecond').value = now.getSeconds();
+        }
+        
+        function updateCurrentTimestamp() {
+            const now = Math.floor(Date.now() / 1000);
+            document.getElementById('currentTimestamp').textContent = now;
+            
+            // 如果输入框为空，也更新输入框
+            if (!document.getElementById('inputTimestamp').value) {
+                document.getElementById('inputTimestamp').value = now;
+                updateTimeDisplay(now);
+            }
+            
+            updateRefreshStatus();
+        }
+        
+        function manualRefresh() {
+            updateCurrentTimestamp();
+        }
+        
+        function startAutoRefresh() {
+            if (!isAutoRefreshing) {
+                updateCurrentTimestamp(); // 立即更新一次
+                refreshInterval = setInterval(updateCurrentTimestamp, 1000);
+                isAutoRefreshing = true;
+                updateRefreshStatus();
+            }
+        }
+        
+        function stopAutoRefresh() {
+            if (isAutoRefreshing) {
+                clearInterval(refreshInterval);
+                isAutoRefreshing = false;
+                updateRefreshStatus();
+            }
+        }
+        
+        function updateRefreshStatus() {
+            const statusElement = document.getElementById('refreshStatus');
+            if (isAutoRefreshing) {
+                statusElement.textContent = `自动刷新中 - 最后更新时间: ${formatFullTime(new Date())}`;
+                statusElement.style.color = "#2ecc71";
+            } else {
+                statusElement.textContent = `已停止 - 最后更新时间: ${formatFullTime(new Date())}`;
+                statusElement.style.color = "#e74c3c";
+            }
+        }
+        
+        function convertTimestampToDate() {
+            const timestampInput = document.getElementById('inputTimestamp').value.trim();
+            const timestamp = parseInt(timestampInput);
+            
+            if (isNaN(timestamp) || timestampInput === '') {
+                alert('请输入有效的Unix时间戳');
+                return;
+            }
+            
+            updateTimeDisplay(timestamp);
+        }
+        
+        function convertDateToTimestamp() {
+            const year = parseInt(document.getElementById('inputYear').value);
+            const month = parseInt(document.getElementById('inputMonth').value);
+            const day = parseInt(document.getElementById('inputDay').value);
+            const hour = parseInt(document.getElementById('inputHour').value);
+            const minute = parseInt(document.getElementById('inputMinute').value);
+            const second = parseInt(document.getElementById('inputSecond').value);
+            
+            // 创建Date对象（月份是0-11）
+            const date = new Date(year, month - 1, day, hour, minute, second);
+            
+            // 获取Unix时间戳（秒数）
+            const timestamp = Math.floor(date.getTime() / 1000);
+            
+            // 显示结果
+            document.getElementById('outputTimestamp').value = timestamp;
+        }
+        
+        function updateTimeDisplay(timestamp) {
+            const date = new Date(timestamp * 1000);
+            
+            document.getElementById('year').textContent = date.getFullYear();
+            document.getElementById('month').textContent = (date.getMonth() + 1).toString().padStart(2, '0');
+            document.getElementById('day').textContent = date.getDate().toString().padStart(2, '0');
+            document.getElementById('hour').textContent = date.getHours().toString().padStart(2, '0');
+            document.getElementById('minute').textContent = date.getMinutes().toString().padStart(2, '0');
+            document.getElementById('second').textContent = date.getSeconds().toString().padStart(2, '0');
+        }
+        
+        function formatFullTime(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+    </script>
+</body>
+</html>
