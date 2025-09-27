@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>节点转换工具</title>
+    <link rel="shortcut icon" href="data:image/png;base64,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">
+ 
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .input-section, .preview-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .example {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .example-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2980b9;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .parse-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .parse-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .download-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .copy-btn {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        .preview-area {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f4fc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .node-count {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        .expiry {
+            font-weight: bold;
+            color: #e67e22;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f1f1f1;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        /* 新增弹窗样式 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .input-section, .preview-section {
+                width: 100%;
+            }
+            
+            .toast {
+                width: 80%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>节点转换工具</h1>
+            <p class="subtitle">批量转换节点为标准格式，并生成可下载的txt文件</p>
+        </header>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2 class="section-title">选择五 地区日期格式到期</h2>
+                <textarea id="inputText" placeholder=""></textarea>
+                
+                <div class="example">
+                    <div class="example-title">输入格式示例：</div>
+                    <p>地址/端口/账号/密码/运营商-地区节点/开始时间/到期时间</p>
+                    <p>例如: 123.cc/80/123/123/嘿嘿/2025-09-28 01:59:24/2025-10-28 01:59:24</p>
+                </div>
+                
+                <div class="buttons">
+                    <button id="parseBtn" class="parse-btn">解析并预览</button>
+                    <button id="downloadBtn" class="download-btn">下载TXT文件</button>
+                    <button id="copyBtn" class="copy-btn">复制到剪贴板</button>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title">预览输出结果</h2>
+                <div id="previewArea" class="preview-area">解析后的结果将显示在这里...</div>
+                
+                <div class="info">
+                    <p>节点数量: <span id="nodeCount" class="node-count">0</span></p>
+                    <p>到期时间: <span id="expiryDate" class="expiry">-</span></p>
+                    <p>文件名: <span id="fileName" class="node-count">0.txt</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 代理节点转换工具 | 自动识别节点中的到期时间</p>
+        </footer>
+    </div>
+
+    <!-- 新增弹窗元素 -->
+    <div id="toast" class="toast">内容已复制到剪贴板</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('inputText');
+            const previewArea = document.getElementById('previewArea');
+            const parseBtn = document.getElementById('parseBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const nodeCount = document.getElementById('nodeCount');
+            const expiryDate = document.getElementById('expiryDate');
+            const fileName = document.getElementById('fileName');
+            const toast = document.getElementById('toast'); // 新增弹窗元素
+            
+            // 显示弹窗函数
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }
+            
+            // 修复时区问题的日期解析函数
+            function parseDateWithoutTimezone(dateString) {
+                // 直接解析日期部分，忽略时区影响
+                const parts = dateString.split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1; // 月份从0开始
+                    const day = parseInt(parts[2]);
+                    return new Date(year, month, day);
+                }
+                return new Date(dateString); // 备用方案
+            }
+            
+            // 解析节点信息
+            function parseNodes() {
+                const input = inputText.value.trim();
+                if (!input) {
+                    previewArea.textContent = "";
+                    nodeCount.textContent = "0";
+                    fileName.textContent = "0.txt";
+                    expiryDate.textContent = "-";
+                    return;
+                }
+                
+                const lines = input.split('\n').filter(line => line.trim());
+                const nodes = [];
+                let latestExpiry = "";
+                
+                lines.forEach((line, index) => {
+                    const parts = line.split('/');
+                    if (parts.length >= 5) {
+                        const address = parts[0];
+                        const port = parts[1];
+                        const username = parts[2];
+                        const password = parts[3];
+                        const description = parts[4];
+                        
+                        // 尝试获取到期时间（最后一个时间字段）
+                        let expiry = "";
+                        for (let i = parts.length - 1; i >= 0; i--) {
+                            if (parts[i].match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
+                                expiry = parts[i].split(' ')[0]; // 只取日期部分
+                                
+                                // 使用修复时区问题的方法比较日期
+                                const expiryDate = parseDateWithoutTimezone(expiry);
+                                const currentLatest = latestExpiry ? parseDateWithoutTimezone(latestExpiry) : null;
+                                
+                                if (!currentLatest || expiryDate > currentLatest) {
+                                    latestExpiry = expiry;
+                                }
+                                break;
+                            }
+                        }
+                        
+                        //const nodeInfo = `${index+1}号${description.split('-')[1].replace('节点', '').replace('住宅', '')}\n类型选socks5\n地址${address}\n端口${port}\n帐号${username}\n密码${password}\n`;
+                        const nodeInfo = `${index+1}号${description.split('-')[1].replace('节点', '').replace('', '')}\n类型选socks5\n地址${address}\n端口${port}\n帐号${username}\n密码${password}\n`;
+                        nodes.push(nodeInfo);
+                    }
+                });
+                
+                // 如果没有找到到期时间，使用当前时间+1个月
+                if (!latestExpiry) {
+                    const now = new Date();
+                    const expiry = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                    latestExpiry = expiry.toISOString().split('T')[0];
+                }
+                
+                const result = nodes.join('\n') + `\n到期时间${latestExpiry}`;
+                
+                previewArea.textContent = result;
+                nodeCount.textContent = nodes.length;
+                fileName.textContent = `${nodes.length}.txt`;
+                expiryDate.textContent = latestExpiry;
+                
+                return result;
+            }
+            
+            // 生成并下载TXT文件
+            function downloadTxt() {
+                const result = parseNodes();
+                if (!result || nodeCount.textContent === "0") {
+                    showToast("请先输入有效的代理节点信息并解析");
+                    return;
+                }
+                
+                const blob = new Blob([result], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${nodeCount.textContent}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+            
+            // 复制到剪贴板
+            function copyToClipboard() {
+                const result = parseNodes();
+                if (!result || nodeCount.textContent === "0") {
+                    showToast("请先输入有效的代理节点信息并解析");
+                    return;
+                }
+                
+                navigator.clipboard.writeText(result).then(() => {
+                    showToast("内容已复制到剪贴板");
+                }).catch(err => {
+                    console.error('复制失败: ', err);
+                    // 备用复制方法
+                    const textArea = document.createElement('textarea');
+                    textArea.value = result;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast("内容已复制到剪贴板");
+                    } catch (e) {
+                        showToast("复制失败，请手动复制预览区域的内容");
+                    }
+                    document.body.removeChild(textArea);
+                });
+            }
+            
+            // 添加粘贴事件监听 - 新增功能
+            inputText.addEventListener('paste', function(e) {
+                // 让浏览器先完成粘贴操作
+                setTimeout(() => {
+                    parseNodes();
+                }, 10);
+            });
+            
+            // 添加输入事件监听 - 新增功能，实现实时解析
+            inputText.addEventListener('input', function() {
+                // 添加防抖，避免频繁解析
+                clearTimeout(inputText.debounceTimer);
+                inputText.debounceTimer = setTimeout(() => {
+                    parseNodes();
+                }, 500);
+            });
+            
+            // 事件监听
+            parseBtn.addEventListener('click', parseNodes);
+            downloadBtn.addEventListener('click', downloadTxt);
+            copyBtn.addEventListener('click', copyToClipboard);
+            
+            // 初始示例数据
+            inputText.value = "";
+            parseNodes();
+        });
+    </script>
+</body>
+</html>
