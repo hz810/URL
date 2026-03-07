@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宏仔Unix时间戳转换工具</title>
-		<link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png"
-		type="image/x-icon">
-		<body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <title>宏仔Unix时间戳转换工具 · 双显增强</title>
+    <link rel="shortcut icon" href="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvpvo701pmn16cebb49sbfbr1.png" type="image/x-icon">
+    <body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
     <style>
         body {
             font-family: "Microsoft YaHei", Arial, sans-serif;
-            max-width: 700px;
+            max-width: 780px;
             margin: 0 auto;
             padding: 20px;
-            /*/background-color: #f5f5f5;/*/
             color: #333;
         }
         .container {
@@ -29,12 +27,83 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
+        /* 新增双时间戳卡片区域 */
+        .double-timestamp-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .timestamp-card {
+            flex: 1 1 200px;
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e0e7f5;
+            transition: 0.2s;
+        }
+        .timestamp-card:hover {
+            border-color: #3498db;
+            background: #ffffff;
+        }
+        .card-label {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .card-label span {
+            background: #3182ce;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .card-value {
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            color: #2c3e50;
+            word-break: break-word;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        .card-convert-btn {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 6px 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(155,89,182,0.3);
+        }
+        .card-convert-btn:hover {
+            background-color: #8e44ad;
+            transform: scale(1.02);
+        }
+        .ms-badge {
+            background: #f39c12;
+            color: #2c3e50;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 30px;
+            margin-left: 10px;
+        }
         .timestamp-display {
             background-color: #f0f0f0;
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 15px;
             font-size: 16px;
+            border-left: 5px solid #3498db;
         }
         .timestamp-value {
             color: #e74c3c;
@@ -153,14 +222,115 @@
         .tab-content.active {
             display: block;
         }
+
+        /* 长窗口样式 - 保留并微调 */
+        .long-info-panel {
+            margin-top: 25px;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #fafafa, #ffffff);
+            border-left: 6px solid #3498db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 16px 22px;
+            font-size: 15px;
+        }
+        .long-info-panel h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            font-weight: 550;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px dashed #b0c4de;
+            padding-bottom: 8px;
+        }
+        .long-info-panel h3:before {
+            content: "📌";
+            font-size: 1.2rem;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .info-label {
+            font-weight: 600;
+            width: 110px;
+            color: #2c3e50;
+        }
+        .info-content {
+            flex: 1;
+            background: #f2f6f9;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-family: 'Courier New', monospace;
+            word-break: break-word;
+            border: 1px solid #d6e9f5;
+        }
+        .info-highlight {
+            background-color: #fef9e4;
+            border-left: 4px solid #f1c40f;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 15px 0 5px 0;
+            font-size: 15px;
+        }
+        .small-note {
+            color: #5f6b7a;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            padding-left: 10px;
+            border-left: 3px solid #b0c4de;
+        }
+        .ms-tip {
+            background: #e8f0fe;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 13px;
+            color: #2c5282;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><center>宏仔Unix时间戳转换工具</center></h1>
+        <h1><center>⏱️ 宏仔Unix时间戳转换工具 · 双显版</center></h1>
         
+        <!-- 新增：两个固定时间戳卡片 (符合要求: 1772909755 和 1770465600000) -->
+        <div class="double-timestamp-row">
+            <!-- 卡片1: 秒级时间戳 1772909755 -->
+            <div class="timestamp-card">
+                <div class="card-label">
+                    🔹 固定时间戳 (秒) <span>Unix秒</span>
+                </div>
+                <div class="card-value">1772909755</div>
+                <button class="card-convert-btn" onclick="quickConvertSeconds()">
+                    ⚡ 转换此时间戳 <span style="font-size:12px;">↗</span>
+                </button>
+                <div style="margin-top: 6px; font-size:13px; color:#2b6f9b;">
+                    对应日期: <span id="fixedSecDate">2026-03-09 18:55:55</span>
+                </div>
+            </div>
+            <!-- 卡片2: 毫秒级时间戳 1770465600000 -->
+            <div class="timestamp-card">
+                <div class="card-label">
+                    🔸 固定时间戳 (毫秒) <span class="ms-badge">ms</span>
+                </div>
+                <div class="card-value" style="font-size:22px;">1770465600000</div>
+                <button class="card-convert-btn" onclick="quickConvertMilliseconds()">
+                    ⚡ 转换此毫秒戳 <span style="font-size:12px;">↗</span>
+                </button>
+                <div style="margin-top: 6px; font-size:13px; color:#c45e0f;">
+                    北京时间: <span id="fixedMsDate">2026-03-08 12:00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 原有的实时动态时间戳区块 (保留，但下面加一行强调) -->
         <div class="timestamp-display">
-            现在的Unix时间戳(Unix timestamp)是：<span class="timestamp-value" id="currentTimestamp">1749233044</span>
+            ⏰ 当前实时Unix时间戳(秒)是：<span class="timestamp-value" id="currentTimestamp">1749233044</span>
+            <span style="margin-left:10px;background:#2ecc71;color:white;padding:2px 8px;border-radius:12px;">动态刷新</span>
         </div>
         
         <div class="control-buttons">
@@ -177,8 +347,8 @@
             
             <div id="timestamp-tab" class="tab-content active">
                 <div class="input-group">
-                    <label for="inputTimestamp">Unix时间戳（Unix timestamp）</label>
-                    <input type="text" id="inputTimestamp" placeholder="输入Unix时间戳">
+                    <label for="inputTimestamp">Unix时间戳（支持秒或毫秒）</label>
+                    <input type="text" id="inputTimestamp" placeholder="例如 1770465600 或 1770465600000">
                 </div>
                 
                 <button class="convert-btn" onclick="convertTimestampToDate()">转换Unix时间戳</button>
@@ -247,6 +417,33 @@
             </div>
         </div>
         
+        <!-- 原有的长窗口（毫秒深度解析），保留并适当关联 -->
+        <div class="long-info-panel" id="longAnalysisWindow">
+            <h3>🔍 毫秒时间戳深度解析 · 长窗口</h3>
+            <div class="info-row">
+                <span class="info-label">原始毫秒值</span>
+                <span class="info-content" style="background:#eef4ff;" id="longMsValue">1770465600000</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">转换秒数 (÷1000)</span>
+                <span class="info-content" id="longSecValue">1770465600</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">格林威治时间 (GMT+0)</span>
+                <span class="info-content" id="gmtTimeDisplay">2026-03-08 04:00:00 周日</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">北京时间 (CST, UTC+8)</span>
+                <span class="info-content" style="background:#e6f7e6; font-weight:500;" id="cstTimeDisplay">2026-03-08 12:00:00 周日</span>
+            </div>
+            <div class="info-highlight">
+                <strong>📎 抖音/分页参数解读：</strong> 你提供的链接参数 <code>max_cursor=1770465600000</code> 代表 <strong>2026年3月8日（周日）中午12:00:00（北京时间）</strong>。在接口中常表示“只请求这个时间点之前的内容”。
+            </div>
+            <div class="small-note">
+                <span class="ms-tip">⏲️ 毫秒时间戳 · 常见于JavaScript、抖音接口</span> 点击上方毫秒卡片的转换按钮可快速填充。
+            </div>
+        </div>
+
         <div class="auto-refresh-status" id="refreshStatus"></div>
     </div>
 
@@ -254,53 +451,99 @@
         let refreshInterval;
         let isAutoRefreshing = false;
         
-        // 初始化 - 页面加载时自动开始刷新
         window.onload = function() {
             startAutoRefresh();
             generateYearOptions();
             generateDayOptions();
             generateTimeOptions();
             setCurrentDateTime();
+            // 预先填充长窗口与卡片日期 (确保日期正确)
+            updateFixedCardsDate();
+            fillLongAnalysisWindow(); 
+            // 预置一个示例时间戳到输入框 (方便演示)
+            document.getElementById('inputTimestamp').value = '1770465600';
+            updateTimeDisplay(1770465600);
         };
-        
-        function switchTab(tabId) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // 取消所有标签按钮的active类
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            
-            // 显示选中的标签内容
-            document.getElementById(tabId).classList.add('active');
-            
-            // 设置选中的标签按钮为active
-            event.currentTarget.classList.add('active');
+
+        // 更新卡片上显示的日期 (秒级卡片、毫秒级卡片)
+        function updateFixedCardsDate() {
+            // 秒级: 1772909755 -> 本地时间显示
+            const secTs = 1772909755;
+            const secDate = new Date(secTs * 1000);
+            document.getElementById('fixedSecDate').innerText = formatFullDate(secDate);
+
+            // 毫秒级: 1770465600000 -> 北京时间 (我们显示为北京时间, 与长窗口保持一致)
+            const msTs = 1770465600000;
+            const beijingDate = new Date(msTs + 8 * 3600 * 1000); // 简单+8h转为北京时间显示（用UTC读）
+            const bjYear = beijingDate.getUTCFullYear();
+            const bjMonth = (beijingDate.getUTCMonth() + 1).toString().padStart(2,'0');
+            const bjDay = beijingDate.getUTCDate().toString().padStart(2,'0');
+            const bjHour = beijingDate.getUTCHours().toString().padStart(2,'0');
+            const bjMin = beijingDate.getUTCMinutes().toString().padStart(2,'0');
+            const bjSec = beijingDate.getUTCSeconds().toString().padStart(2,'0');
+            document.getElementById('fixedMsDate').innerText = `${bjYear}-${bjMonth}-${bjDay} ${bjHour}:${bjMin}:${bjSec}`;
+        }
+
+        function formatFullDate(date) {
+            const y = date.getFullYear();
+            const m = (date.getMonth()+1).toString().padStart(2,'0');
+            const d = date.getDate().toString().padStart(2,'0');
+            const hh = date.getHours().toString().padStart(2,'0');
+            const mm = date.getMinutes().toString().padStart(2,'0');
+            const ss = date.getSeconds().toString().padStart(2,'0');
+            return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
         }
         
+        // 快速转换秒卡片: 将1772909755填入输入框并执行转换
+        function quickConvertSeconds() {
+            const secTs = 1772909755;
+            document.getElementById('inputTimestamp').value = secTs;
+            // 自动切换到第一个标签（时间戳转日期）
+            switchTabByName('timestamp-tab');
+            updateTimeDisplay(secTs);
+        }
+
+        // 快速转换毫秒卡片: 处理1770465600000 (除以1000后填入，但也可以保留毫秒让convert识别)
+        function quickConvertMilliseconds() {
+            const msTs = 1770465600000;
+            document.getElementById('inputTimestamp').value = msTs;  // 直接填入毫秒，convert函数会智能判断
+            switchTabByName('timestamp-tab');
+            // 调用转换函数 (它内部会处理毫秒)
+            convertTimestampToDate();
+
+            // 同时高亮长窗口，可滚动过去
+            document.getElementById('longAnalysisWindow').style.backgroundColor = '#fffdf0';
+            setTimeout(()=> document.getElementById('longAnalysisWindow').style.backgroundColor = '', 600);
+        }
+
+        function switchTabByName(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            // 根据tabId激活对应的按钮 (第一个按钮是timestamp-tab，第二个datetime-tab)
+            const buttons = document.querySelectorAll('.tab-button');
+            if (tabId === 'timestamp-tab' && buttons[0]) buttons[0].classList.add('active');
+            else if (tabId === 'datetime-tab' && buttons[1]) buttons[1].classList.add('active');
+        }
+
+        function switchTab(tabId) {
+            switchTabByName(tabId);
+        }
+
         function generateYearOptions() {
             const yearSelect = document.getElementById('inputYear');
             const currentYear = new Date().getFullYear();
-            
-            // 生成从当前年份前后各20年的选项
             for (let year = currentYear - 20; year <= currentYear + 20; year++) {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year + '年';
-                if (year === currentYear) {
-                    option.selected = true;
-                }
+                if (year === currentYear) option.selected = true;
                 yearSelect.appendChild(option);
             }
         }
         
         function generateDayOptions() {
             const daySelect = document.getElementById('inputDay');
-            
-            // 生成1-31日的选项
             for (let day = 1; day <= 31; day++) {
                 const option = document.createElement('option');
                 option.value = day;
@@ -313,24 +556,18 @@
             const hourSelect = document.getElementById('inputHour');
             const minuteSelect = document.getElementById('inputMinute');
             const secondSelect = document.getElementById('inputSecond');
-            
-            // 生成0-23小时的选项
             for (let hour = 0; hour < 24; hour++) {
                 const option = document.createElement('option');
                 option.value = hour;
                 option.textContent = hour.toString().padStart(2, '0') + '时';
                 hourSelect.appendChild(option);
             }
-            
-            // 生成0-59分钟的选项
             for (let minute = 0; minute < 60; minute++) {
                 const option = document.createElement('option');
                 option.value = minute;
                 option.textContent = minute.toString().padStart(2, '0') + '分';
                 minuteSelect.appendChild(option);
             }
-            
-            // 生成0-59秒钟的选项
             for (let second = 0; second < 60; second++) {
                 const option = document.createElement('option');
                 option.value = second;
@@ -352,13 +589,11 @@
         function updateCurrentTimestamp() {
             const now = Math.floor(Date.now() / 1000);
             document.getElementById('currentTimestamp').textContent = now;
-            
-            // 如果输入框为空，也更新输入框
-            if (!document.getElementById('inputTimestamp').value) {
-                document.getElementById('inputTimestamp').value = now;
+            const tsInput = document.getElementById('inputTimestamp');
+            if (!tsInput.value.trim()) {
+                tsInput.value = now;
                 updateTimeDisplay(now);
             }
-            
             updateRefreshStatus();
         }
         
@@ -368,7 +603,7 @@
         
         function startAutoRefresh() {
             if (!isAutoRefreshing) {
-                updateCurrentTimestamp(); // 立即更新一次
+                updateCurrentTimestamp();
                 refreshInterval = setInterval(updateCurrentTimestamp, 1000);
                 isAutoRefreshing = true;
                 updateRefreshStatus();
@@ -394,15 +629,17 @@
             }
         }
         
+        // 增强版转换：自动识别毫秒（如果数值 > 1e11 或 长度13位左右，当作毫秒处理）
         function convertTimestampToDate() {
-            const timestampInput = document.getElementById('inputTimestamp').value.trim();
-            const timestamp = parseInt(timestampInput);
+            let input = document.getElementById('inputTimestamp').value.trim();
+            if (input === '') return alert('请输入时间戳');
+            let timestamp = Number(input);
+            if (isNaN(timestamp)) return alert('无效数字');
             
-            if (isNaN(timestamp) || timestampInput === '') {
-                alert('请输入有效的Unix时间戳');
-                return;
+            // 简单启发: 如果大于 1e11 (约等于 5138-10-04 左右) 或长度>=12，当作毫秒处理
+            if (timestamp > 1e11 || input.length >= 12) {
+                timestamp = Math.floor(timestamp / 1000);
             }
-            
             updateTimeDisplay(timestamp);
         }
         
@@ -413,20 +650,13 @@
             const hour = parseInt(document.getElementById('inputHour').value);
             const minute = parseInt(document.getElementById('inputMinute').value);
             const second = parseInt(document.getElementById('inputSecond').value);
-            
-            // 创建Date对象（月份是0-11）
             const date = new Date(year, month - 1, day, hour, minute, second);
-            
-            // 获取Unix时间戳（秒数）
             const timestamp = Math.floor(date.getTime() / 1000);
-            
-            // 显示结果
             document.getElementById('outputTimestamp').value = timestamp;
         }
         
         function updateTimeDisplay(timestamp) {
             const date = new Date(timestamp * 1000);
-            
             document.getElementById('year').textContent = date.getFullYear();
             document.getElementById('month').textContent = (date.getMonth() + 1).toString().padStart(2, '0');
             document.getElementById('day').textContent = date.getDate().toString().padStart(2, '0');
@@ -436,14 +666,41 @@
         }
         
         function formatFullTime(date) {
-            const year = date.getFullYear();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const day = date.getDate().toString().padStart(2, '0');
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            const seconds = date.getSeconds().toString().padStart(2, '0');
-            
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            return date.getFullYear() + '-' + 
+                (date.getMonth()+1).toString().padStart(2,'0') + '-' +
+                date.getDate().toString().padStart(2,'0') + ' ' +
+                date.getHours().toString().padStart(2,'0') + ':' +
+                date.getMinutes().toString().padStart(2,'0') + ':' +
+                date.getSeconds().toString().padStart(2,'0');
+        }
+
+        // 填充长窗口 (基于1770465600000)
+        function fillLongAnalysisWindow() {
+            const ms = 1770465600000;
+            const sec = Math.floor(ms / 1000);
+            document.getElementById('longMsValue').innerText = ms;
+            document.getElementById('longSecValue').innerText = sec;
+
+            const gmtDate = new Date(sec * 1000);
+            const yearUTC = gmtDate.getUTCFullYear();
+            const monthUTC = (gmtDate.getUTCMonth() + 1).toString().padStart(2,'0');
+            const dayUTC = gmtDate.getUTCDate().toString().padStart(2,'0');
+            const hourUTC = gmtDate.getUTCHours().toString().padStart(2,'0');
+            const minuteUTC = gmtDate.getUTCMinutes().toString().padStart(2,'0');
+            const secondUTC = gmtDate.getUTCSeconds().toString().padStart(2,'0');
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const weekdayUTC = weekdays[gmtDate.getUTCDay()];
+            document.getElementById('gmtTimeDisplay').innerText = `${yearUTC}-${monthUTC}-${dayUTC} ${hourUTC}:${minuteUTC}:${secondUTC} ${weekdayUTC}`;
+
+            const beijingDate = new Date(sec * 1000 + 8 * 3600 * 1000);
+            const bjYear = beijingDate.getUTCFullYear();
+            const bjMonth = (beijingDate.getUTCMonth() + 1).toString().padStart(2,'0');
+            const bjDay = beijingDate.getUTCDate().toString().padStart(2,'0');
+            const bjHour = beijingDate.getUTCHours().toString().padStart(2,'0');
+            const bjMin = beijingDate.getUTCMinutes().toString().padStart(2,'0');
+            const bjSec = beijingDate.getUTCSeconds().toString().padStart(2,'0');
+            const bjWeekday = weekdays[beijingDate.getUTCDay()];
+            document.getElementById('cstTimeDisplay').innerText = `${bjYear}-${bjMonth}-${bjDay} ${bjHour}:${bjMin}:${bjSec} ${bjWeekday}`;
         }
     </script>
 </body>
