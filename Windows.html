@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>URL 快捷方式生成器</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: "Microsoft YaHei", Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 15px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #6a3093 100%);
+    background-size: 200% 200%;
+    animation: bgMove 18s ease infinite;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  @keyframes bgMove {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.45;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    width: 420px; height: 420px;
+    background: #4facfe;
+    top: -120px; left: -120px;
+    animation: float1 12s ease-in-out infinite;
+  }
+  body::after {
+    width: 380px; height: 380px;
+    background: #ff6ec4;
+    bottom: -140px; right: -120px;
+    animation: float2 14s ease-in-out infinite;
+  }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(60px, 40px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0); }
+    50%      { transform: translate(-50px, -30px); }
+  }
+
+  .box {
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    max-width: 100%;
+    padding: 30px 34px 34px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow:
+      0 20px 45px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  h2 {
+    margin: 0 0 8px;
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #1e3c72, #6a3093, #1e3c72);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: textFlow 6s linear infinite;
+  }
+  @keyframes textFlow { to { background-position: 200% center; } }
+
+  .title-bar {
+    width: 56px; height: 4px;
+    margin: 0 auto 22px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #4facfe, #ff6ec4);
+    box-shadow: 0 0 12px rgba(79, 172, 254, 0.7);
+  }
+
+  label {
+    display: block;
+    margin: 14px 0 6px;
+    color: #34495e;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  input[type="text"],
+  select {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    background: #f9fbfd;
+    transition: all 0.25s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+  input[type="text"]:hover,
+  select:hover { border-color: #a9c7f0; }
+
+  input[type="text"]:focus,
+  select:focus {
+    border-color: #4a90e2;
+    background: #fff;
+    box-shadow:
+      0 0 0 4px rgba(74, 144, 226, 0.15),
+      inset 0 1px 3px rgba(0, 0, 0, 0.03);
+    transform: translateY(-1px);
+  }
+
+  button {
+    position: relative;
+    width: 100%;
+    margin-top: 26px;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #fff;
+    cursor: pointer;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4facfe 0%, #6a3093 100%);
+    background-size: 200% 200%;
+    box-shadow: 0 8px 20px rgba(74, 144, 226, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.25s ease, background-position 0.4s ease;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    background-position: 100% 0;
+    box-shadow: 0 12px 26px rgba(106, 48, 147, 0.45);
+  }
+  button:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 5px 14px rgba(74, 144, 226, 0.35);
+  }
+  button::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -80%;
+    width: 60%; height: 100%;
+    background: linear-gradient(
+      120deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.45) 50%,
+      rgba(255,255,255,0) 100%
+    );
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+  }
+  button:hover::after { left: 130%; }
+
+  .tip {
+    margin-top: 18px;
+    font-size: 12px;
+    color: #7a8899;
+    line-height: 1.8;
+    text-align: center;
+    border-top: 1px dashed rgba(0,0,0,0.08);
+    padding-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>URL 快捷方式生成器</h2>
+  <div class="title-bar"></div>
+
+  <label>名称（文件名）</label>
+  <input id="name" type="text" placeholder="例如：百度一下" value="">
+
+  <label>网站链接</label>
+  <input id="url" type="text" placeholder="例如：https://www.baidu.com/" value="">
+
+  <label>选择图标</label>
+  <select id="icon">
+    <option value="34" selected>浏览器（默认，34）</option>
+    <option value="220">蝴蝶（220）</option>
+    <option value="43">树 / 文件夹（43）</option>
+    <option value="13">地球 / 网络（13）</option>
+    <option value="14">网络连接（14）</option>
+    <option value="15">我的电脑（15）</option>
+    <option value="21">控制面板（21）</option>
+    <option value="22">帮助（22）</option>
+    <option value="24">搜索（24）</option>
+    <option value="0">默认文档（0）</option>
+    <option value="1">文档（1）</option>
+    <option value="2">应用程序（2）</option>
+  </select>
+
+  <button onclick="generate()">生成并下载 ZIP</button>
+
+  <div class="tip">
+    下载后解压，得到干净的 .url 文件，双击即可打开网站。<br>
+    图标使用 SHELL32.dll，编号可在“更改图标”里核对。
+  </div>
+</div>
+
+<!-- 引入 JSZip -->
+<script src="jszip.min.js"></script>
+<script>
+function generate() {
+  const name = document.getElementById('name').value.trim() || '快捷方式';
+  let url = document.getElementById('url').value.trim();
+  const iconIndex = document.getElementById('icon').value;
+
+  if (!url) {
+    alert('请输入网站链接');
+    return;
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+
+  const safeName = name.replace(/[\\/:*?"<>|]/g, '_');
+
+  const content =
+`[{000214A0-0000-0000-C000-000000000046}]
+Prop3=19,11
+[InternetShortcut]
+IDList=
+URL=${url}
+IconFile=C:\\Windows\\System32\\SHELL32.dll
+IconIndex=${iconIndex}
+HotKey=0
+`;
+
+  const zip = new JSZip();
+  zip.file(safeName + '.url', content);
+
+  zip.generateAsync({ type: 'blob' }).then(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = safeName + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  });
+}
+</script>
+
+</body>
+</html>
