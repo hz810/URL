@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MobileConfig 宏仔生成器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #e8e4dc;
+    --card: #f5f2ec;
+    --card-2: #ebe7df;
+    --ink: #2b2823;
+    --ink-2: #57534b;
+    --ink-3: #8a857c;
+    --line: #d8d3c8;
+    --line-2: #e2ddd2;
+    --accent: #b85842;
+    --accent-2: #a04a36;
+    --green: #5f7a3d;
+    --red: #b54030;
+}
+
+html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+body {
+    padding: 20px 20px 30px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.shell {
+    width: 100%;
+    max-width: 880px;
+}
+
+/* 顶部 */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 14px;
+}
+.topbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+}
+.topbar .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+.topbar .tag {
+    font-size: 11px;
+    color: var(--ink-3);
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--card);
+}
+
+/* 主卡片 */
+.main {
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--line-2);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 30px -12px rgba(43,40,35,0.12);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+}
+
+/* 左侧表单 */
+.pane-form {
+    padding: 22px 24px;
+    border-right: 1px solid var(--line-2);
+}
+
+.pane-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pane-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line-2);
+}
+
+.row {
+    margin-bottom: 12px;
+}
+.row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: 5px;
+}
+.row label .req { color: var(--accent); font-weight: 700; }
+
+input[type="text"],
+input[type="url"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: var(--ink);
+    background: #fdfbf7;
+    transition: all 0.18s;
+    letter-spacing: 0.01em;
+}
+input::placeholder { color: #b0aa9e; }
+input:hover { border-color: #c5bfb2; }
+input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(184,88,66,0.12);
+}
+
+/* 模式开关 */
+.mode {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fdfbf7;
+}
+.mode button {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--ink-3);
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.mode button + button { border-left: 1px solid var(--line); }
+.mode button.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* 上传区 */
+.uploader {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background: #fdfbf7;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.uploader:hover { border-color: var(--accent); background: #fbf7f2; }
+.uploader.dragover { border-color: var(--accent); background: #f9f0e8; }
+.uploader input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.uploader .thumb {
+    width: 38px; height: 38px;
+    border-radius: 7px;
+    border: 1px solid var(--line-2);
+    background: #fff;
+    padding: 4px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.uploader .thumb img { width: 100%; height: 100%; object-fit: contain; }
+.uploader .txt {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.4;
+    min-width: 0;
+}
+.uploader .txt .hl { color: var(--accent); font-weight: 600; }
+.uploader .txt .fname {
+    color: var(--green); font-weight: 600;
+    font-size: 11px; margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.uploader .rm {
+    position: absolute; top: 6px; right: 6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--line); color: var(--ink-2);
+    border: none; font-size: 10px; line-height: 18px;
+    text-align: center; cursor: pointer; display: none;
+}
+.uploader .rm:hover { background: var(--red); color: #fff; }
+.uploader.has-file .rm { display: block; }
+
+/* 第二应用 */
+.dual { display: none; }
+.dual.show { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.dual .split {
+    display: flex; align-items: center; gap: 8px;
+    margin: 14px 0 10px;
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.dual .split::before,
+.dual .split::after {
+    content: ''; flex: 1; height: 1px; background: var(--line-2);
+}
+
+/* 提交按钮 */
+.btn-go {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.btn-go:hover { background: var(--accent-2); }
+.btn-go:active { transform: translateY(1px); }
+.btn-go:disabled { background: var(--ink-3); cursor: not-allowed; }
+
+/* 右侧结果 */
+.pane-result {
+    padding: 22px 24px;
+    background: var(--card-2);
+    display: flex;
+    flex-direction: column;
+    min-height: 380px;
+}
+
+.placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-3);
+    font-size: 12px;
+    text-align: center;
+    gap: 8px;
+    padding: 20px;
+}
+.placeholder .big {
+    font-size: 32px;
+    opacity: 0.35;
+    margin-bottom: 4px;
+}
+
+.result-inner { display: none; flex-direction: column; flex: 1; }
+.result-inner.show { display: flex; }
+
+.res-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink-3);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 12px;
+    gap: 8px;
+}
+.res-head .nm {
+    color: var(--ink); font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.res-head .sz { flex-shrink: 0; }
+
+.btn-row {
+    display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.mini-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: #fdfbf7;
+    color: var(--ink-2);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+.mini-btn.primary {
+    background: var(--ink);
+    color: #f5f2ec;
+    border-color: var(--ink);
+}
+.mini-btn.primary:hover { background: #000; color: #fff; }
+
+/* 二维码 */
+.qr-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0;
+    gap: 10px;
+}
+.qr-frame {
+    padding: 10px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    display: inline-block;
+    line-height: 0;
+}
+.qr-frame img, .qr-frame canvas { display: block; border-radius: 4px; }
+.qr-hint {
+    font-size: 12px;
+    color: var(--ink-3);
+    text-align: center;
+    min-height: 16px;
+}
+.qr-hint.ok { color: var(--green); font-weight: 600; }
+.qr-hint.err { color: var(--red); font-weight: 600; }
+
+/* 预览 */
+.preview {
+    background: #2b2823;
+    border-radius: 8px;
+    padding: 10px 12px;
+    max-height: 78px;
+    overflow: auto;
+    margin-top: auto;
+}
+.preview::-webkit-scrollbar { width: 5px; }
+.preview::-webkit-scrollbar-thumb { background: #57534b; border-radius: 3px; }
+.preview code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10.5px;
+    color: #d8d3c8;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-all;
+    letter-spacing: 0;
+}
+
+/* 错误条 */
+.bar-err {
+    grid-column: 1 / -1;
+    background: #f7e2dd;
+    color: var(--red);
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 1px solid #ebc8c0;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+.bar-err.show { display: flex; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: #f5f2ec;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 9999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.spinner {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border: 1.5px solid rgba(43,40,35,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -1px;
+    margin-right: 5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 小屏 */
+@media (max-width: 760px) {
+    body { padding: 12px; }
+    .main { grid-template-columns: 1fr; }
+    .pane-form { border-right: none; border-bottom: 1px solid var(--line-2); }
+    .pane-result { min-height: auto; }
+    .pane-form, .pane-result { padding: 18px; }
+    .topbar { padding-bottom: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+    <div class="topbar">
+        <div class="brand">
+            <span class="dot">M</span>
+            MobileConfig 宏仔生成器
+        </div>
+        <span class="tag">宏仔生成器 · 扫码安装</span>
+    </div>
+
+    <div class="main">
+        <div class="bar-err" id="errorBar"></div>
+
+        <!-- 左侧：表单 -->
+        <div class="pane-form">
+            <div class="pane-title">创建配置</div>
+
+            <form id="configForm">
+
+                <div class="row">
+                    <label>模式</label>
+                    <div class="mode" id="modeSwitch">
+                        <button type="button" class="active" data-mode="single" onclick="setMode('single')">单开</button>
+                        <button type="button" data-mode="dual" onclick="setMode('dual')">双开</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <label>应用名称 <span class="req">*</span></label>
+                    <input type="text" id="appName" placeholder="例如：百度一下" required>
+                </div>
+
+                <div class="row">
+                    <label>URL 地址 <span class="req">*</span></label>
+                    <input type="url" id="appUrl" placeholder="https://www.baidu.com" required>
+                </div>
+
+                <div class="row">
+                    <label>图标（可选）</label>
+                    <div class="uploader" id="uploadArea1">
+                        <div class="thumb"><img id="iconPreview1" alt=""></div>
+                        <div class="txt">
+                            <div><span class="hl">点击上传</span> 或拖入图片</div>
+                            <div style="font-size:11px;margin-top:1px;">PNG · JPG · GIF · WEBP · ≤2MB</div>
+                            <div class="fname" id="fileName1"></div>
+                        </div>
+                        <button type="button" class="rm" onclick="clearIcon('1')">✕</button>
+                        <input type="file" id="iconInput1" accept="image/png,image/jpeg,image/gif,image/webp">
+                    </div>
+                </div>
+
+                <div class="dual" id="dualFields">
+                    <div class="split">第二个应用</div>
+
+                    <div class="row">
+                        <label>应用名称 <span class="req">*</span></label>
+                        <input type="text" id="appName2" placeholder="例如：百度一下">
+                    </div>
+
+                    <div class="row">
+                        <label>URL 地址 <span class="req">*</span></label>
+                        <input type="url" id="appUrl2" placeholder="https://www.baidu.com">
+                    </div>
+
+                    <div class="row">
+                        <label>图标（可选）</label>
+                        <div class="uploader" id="uploadArea2">
+                            <div class="thumb"><img id="iconPreview2" alt=""></div>
+                            <div class="txt">
+                                <div><span class="hl">点击上传</span> 或拖入图片</div>
+                                <div style="font-size:11px;margin-top:1px;">PNG · JPG · GIF · WEBP · ≤2MB</div>
+                                <div class="fname" id="fileName2"></div>
+                            </div>
+                            <button type="button" class="rm" onclick="clearIcon('2')">✕</button>
+                            <input type="file" id="iconInput2" accept="image/png,image/jpeg,image/gif,image/webp">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-go" id="submitBtn">生成并上传</button>
+            </form>
+        </div>
+
+        <!-- 右侧：结果 -->
+        <div class="pane-result">
+            <div class="placeholder" id="placeholder">
+                <div class="big">⌘</div>
+                <div>填写左侧信息后点击生成</div>
+                <div>生成的配置文件会自动生成并显示二维码</div>
+            </div>
+
+            <div class="result-inner" id="resultInner">
+                <div class="res-head">
+                    <span class="nm" id="resultFilename"></span>
+                    <span class="sz" id="resultSize"></span>
+                </div>
+
+                <div class="btn-row">
+                    <a href="#" class="mini-btn primary" id="downloadLink">下载</a>
+                    <button class="mini-btn" onclick="copyContent()">复制内容</button>
+                    <button class="mini-btn" onclick="copyLink()">复制链接</button>
+                </div>
+
+                <div class="qr-wrap">
+                    <div class="qr-frame" id="qrcodeBox"></div>
+                    <div class="qr-hint" id="uploadStatus"></div>
+                </div>
+
+                <div class="preview">
+                    <code id="plistContent"></code>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="qrcode.min.js"></script>
+<script>
+const GITHUB_CONFIG = {
+    owner: 'hz810',
+    repo: 'URL',
+    branch: 'main',
+    token: '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',
+    usePages: true,
+    pagesBase: 'https://hz810.github.io/URL'
+};
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const DEFAULT_ICON = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAAAKISURBVGiB7Zm7jtNAFIaPkysU+AFQ8gQIoUuLREdFA+KRgAQN0tLSUaA8Bci0sBOQeABK5ERpFiRKlBCShG8m3jF2bCd2vHbX7P6NvVvP+fzPzh77mE0T4aUPiIxQZzRihJwWJhqjZQUm4WJg8YI2HmFhKQfxYACJFIVIA6hHGp6qR5uLw6aDwnIezY3RdoPIAbK5uSktOwD2FmSOgUVHyeLdE9WKDw8zsCk3SfjRZSt2PB3NQFQHHTIEwOEF8C6U6AADm4MpXgC/AB2tUJ3ByPCKM1sA+I3SPIHNldKpLcD3QKIdqT1MMvBk7iPZEgAA5UEiY/M8PcazkEVeJtnKrwD0mcfI2O4B+WLLdGIAWHmG2Ai9tqL+cX+o4kUdCwAceAAY/QH0sYABZAAivV+9A+yh9w7E6AtAuvzhHAe93UDWqk/06ANsTYxNezrFwLNmDfj/8i9i6S1B3CBG7wAZfQBOAPQp3gfIPpUTtHcZgIks3h7Kx0Kei16AWQDwzSTGLiRcYI9l20KBPyzCFpIPgHa3KGPM52mK5AEMj9Nj2kKE0Zyz4gH4neWlDzBwBMr32LtPsa2M02Mty3iHovU0eiZloi8wQM1R25SJvcDAYWohvsj8G7tWvCvQrgVRyR1FmRFmtFzQQhu8z7dSijMLwPwzxj0bfMEhzf/HNrXwwR0FcI7EBUhB0bmAFKLXB1HATgO8VlRSvDEVvDkbeAGshoB7h4G6K7N45x4D5FqO8SUKUF1h8ZeDngFwWbRq3OAEQfL2sxHxF9CW9wdMibADfPvykQGfBT8AbJ2uZ9hnZ7WQh73TCL0OjDGAyLP1dNKp9fx+c3vvB3kItoXj5QbjAAAAAElFTkSuQmCC';
+
+let iconData1 = DEFAULT_ICON;
+let iconData2 = DEFAULT_ICON;
+let currentPlist = '';
+let currentFilename = '';
+
+document.getElementById('iconPreview1').src = 'data:image/png;base64,' + DEFAULT_ICON;
+document.getElementById('iconPreview2').src = 'data:image/png;base64,' + DEFAULT_ICON;
+
+function setMode(mode) {
+    document.querySelectorAll('#modeSwitch button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    document.getElementById('dualFields').classList.toggle('show', mode === 'dual');
+    document.getElementById('appName2').required = (mode === 'dual');
+    document.getElementById('appUrl2').required = (mode === 'dual');
+    document.getElementById('modeSwitch').dataset.mode = mode;
+}
+
+function handleIconUpload(event, id) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) { alert('文件大小超过 2MB'); event.target.value = ''; return; }
+    const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) { alert('仅支持 PNG、JPG、GIF、WEBP'); event.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result.split(',')[1];
+        document.getElementById('iconPreview' + id).src = e.target.result;
+        document.getElementById('fileName' + id).textContent = file.name;
+        document.getElementById('uploadArea' + id).classList.add('has-file');
+        if (id === '1') iconData1 = base64; else iconData2 = base64;
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearIcon(id) {
+    document.getElementById('iconInput' + id).value = '';
+    document.getElementById('iconPreview' + id).src = 'data:image/png;base64,' + DEFAULT_ICON;
+    document.getElementById('fileName' + id).textContent = '';
+    document.getElementById('uploadArea' + id).classList.remove('has-file');
+    if (id === '1') iconData1 = DEFAULT_ICON; else iconData2 = DEFAULT_ICON;
+}
+
+['1','2'].forEach(id => {
+    const area = document.getElementById('uploadArea' + id);
+    const input = document.getElementById('iconInput' + id);
+    area.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') input.click(); });
+    input.addEventListener('change', e => handleIconUpload(e, id));
+    area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+    area.addEventListener('dragleave', e => { e.preventDefault(); area.classList.remove('dragover'); });
+    area.addEventListener('drop', e => {
+        e.preventDefault(); area.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const dt = new DataTransfer(); dt.items.add(files[0]);
+            input.files = dt.files; input.dispatchEvent(new Event('change'));
+        }
+    });
+});
+
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function escapeXml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function buildWebClipDict(clip) {
+    let xml = '<dict>\n';
+    xml += '<key>FullScreen</key>\n<true/>\n';
+    xml += '<key>Icon</key>\n<data>' + clip.Icon + '</data>\n';
+    xml += '<key>IgnoreManifestScope</key>\n<true/>\n';
+    xml += '<key>IsRemovable</key>\n<true/>\n';
+    xml += '<key>Label</key>\n<string>' + escapeXml(clip.Label) + '</string>\n';
+    xml += '<key>PayloadDescription</key>\n<string>Configures settings for a web clip</string>\n';
+    xml += '<key>PayloadDisplayName</key>\n<string>Web Clip</string>\n';
+    xml += '<key>PayloadIdentifier</key>\n<string>' + escapeXml(clip.PayloadIdentifier) + '</string>\n';
+    xml += '<key>PayloadType</key>\n<string>com.apple.webClip.managed</string>\n';
+    xml += '<key>PayloadUUID</key>\n<string>' + clip.PayloadUUID + '</string>\n';
+    xml += '<key>PayloadVersion</key>\n<integer>1</integer>\n';
+    xml += '<key>Precomposed</key>\n<true/>\n';
+    xml += '<key>URL</key>\n<string>' + escapeXml(clip.URL) + '</string>\n';
+    xml += '</dict>\n';
+    return xml;
+}
+
+function generatePlist(config) {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n';
+    xml += '<plist version="1.0">\n<dict>\n';
+    xml += '<key>ConsentText</key>\n<dict><key>default</key><string></string></dict>\n';
+    xml += '<key>HasRemovalPasscode</key>\n<false/>\n';
+    xml += '<key>PayloadContent</key>\n<array>\n';
+    config.PayloadContent.forEach(clip => { xml += buildWebClipDict(clip); });
+    xml += '</array>\n';
+    xml += '<key>PayloadDescription</key>\n<string></string>\n';
+    xml += '<key>PayloadDisplayName</key>\n<string>' + escapeXml(config.PayloadDisplayName) + '</string>\n';
+    xml += '<key>PayloadIdentifier</key>\n<string>' + escapeXml(config.PayloadIdentifier) + '</string>\n';
+    xml += '<key>PayloadOrganization</key>\n<string>' + escapeXml(config.PayloadOrganization) + '</string>\n';
+    xml += '<key>PayloadRemovalDisallowed</key>\n<false/>\n';
+    xml += '<key>PayloadType</key>\n<string>Configuration</string>\n';
+    xml += '<key>PayloadUUID</key>\n<string>' + config.PayloadUUID + '</string>\n';
+    xml += '<key>PayloadVersion</key>\n<integer>1</integer>\n';
+    xml += '</dict>\n</plist>\n';
+    return xml;
+}
+
+function toBase64Utf8(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+
+async function uploadToGitHub(filename, contentStr) {
+    const path = 'files/' + filename;
+    const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${encodeURIComponent(path)}`;
+
+    const body = {
+        message: 'upload mobileconfig ' + filename,
+        content: toBase64Utf8(contentStr),
+        branch: GITHUB_CONFIG.branch
+    };
+
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + GITHUB_CONFIG.token,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(`生成失败 (${res.status})：${errData.message || '未知错误'}`);
+    }
+
+    await res.json();
+
+    if (GITHUB_CONFIG.usePages && GITHUB_CONFIG.pagesBase) {
+        const base = GITHUB_CONFIG.pagesBase.replace(/\/$/, '');
+        return base + '/' + path.split('/').map(encodeURIComponent).join('/');
+    } else {
+        return `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${path.split('/').map(encodeURIComponent).join('/')}`;
+    }
+}
+
+function renderQRCode(url) {
+    const box = document.getElementById('qrcodeBox');
+    box.innerHTML = '';
+    try {
+        new QRCode(box, {
+            text: url,
+            width: 152,
+            height: 152,
+            colorDark: '#2b2823',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+        });
+    } catch (e) {
+        box.innerHTML = '<div style="padding:14px;color:#b54030;font-size:12px;">二维码生成失败</div>';
+    }
+}
+
+document.getElementById('configForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const errorBar = document.getElementById('errorBar');
+    const placeholder = document.getElementById('placeholder');
+    const resultInner = document.getElementById('resultInner');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusEl = document.getElementById('uploadStatus');
+
+    errorBar.classList.remove('show');
+    errorBar.textContent = '';
+    statusEl.textContent = '';
+    statusEl.className = 'qr-hint';
+
+    const mode = document.getElementById('modeSwitch').dataset.mode || 'single';
+    const appName = document.getElementById('appName').value.trim();
+    const appUrl = document.getElementById('appUrl').value.trim();
+    const errors = [];
+
+    if (!appName) errors.push('请输入应用名称');
+    if (!appUrl) errors.push('请输入 URL');
+    else { try { new URL(appUrl); } catch { errors.push('URL 格式无效'); } }
+
+    let appName2 = '', appUrl2 = '';
+    if (mode === 'dual') {
+        appName2 = document.getElementById('appName2').value.trim();
+        appUrl2 = document.getElementById('appUrl2').value.trim();
+        if (!appName2) errors.push('请输入第二个应用名称');
+        if (!appUrl2) errors.push('第二个 URL 不能为空');
+        else { try { new URL(appUrl2); } catch { errors.push('第二个 URL 无效'); } }
+    }
+
+    if (errors.length > 0) {
+        errorBar.textContent = '⚠ ' + errors.join(' · ');
+        errorBar.classList.add('show');
+        return;
+    }
+
+    const payloadUUID1 = generateUUID();
+    const configUUID = generateUUID();
+    const payloadContent = [{
+        FullScreen: true, Icon: iconData1 || DEFAULT_ICON, IgnoreManifestScope: true,
+        IsRemovable: true, Label: appName,
+        PayloadIdentifier: 'com.apple.webClip.managed.' + payloadUUID1,
+        PayloadUUID: payloadUUID1, URL: appUrl
+    }];
+
+    if (mode === 'dual') {
+        const payloadUUID2 = generateUUID();
+        payloadContent.push({
+            FullScreen: true, Icon: iconData2 || DEFAULT_ICON, IgnoreManifestScope: true,
+            IsRemovable: true, Label: appName2,
+            PayloadIdentifier: 'com.apple.webClip.managed.' + payloadUUID2,
+            PayloadUUID: payloadUUID2, URL: appUrl2
+        });
+    }
+
+    const config = {
+        PayloadContent: payloadContent,
+        PayloadDisplayName: mode === 'dual' ? '双开-' + appName + '与' + appName2 : appName,
+        PayloadIdentifier: 'mobileconfig.' + configUUID,
+        PayloadOrganization: mode === 'dual' ? '双开' : appName,
+        PayloadUUID: configUUID
+    };
+
+    currentPlist = generatePlist(config);
+
+    const stamp = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    let baseName = mode === 'dual' ? '双开-' + appName + '与' + appName2 : appName;
+    baseName = baseName.replace(/[^\w\u4e00-\u9fa5\-]/g, '_').slice(0, 40);
+    currentFilename = baseName + '-' + stamp + '.mobileconfig';
+
+    const downloadBase64 = btoa(unescape(encodeURIComponent(currentPlist)));
+    document.getElementById('downloadLink').href = 'data:application/x-apple-aspen-config;base64,' + downloadBase64;
+    document.getElementById('downloadLink').download = currentFilename;
+    document.getElementById('resultFilename').textContent = currentFilename;
+    document.getElementById('resultSize').textContent = (currentPlist.length / 1024).toFixed(1) + ' KB';
+    document.getElementById('plistContent').textContent = currentPlist;
+
+    placeholder.style.display = 'none';
+    resultInner.classList.add('show');
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '生成中…';
+    statusEl.innerHTML = '<span class="spinner"></span>正在生成…';
+    statusEl.className = 'qr-hint';
+
+    try {
+        const publicUrl = await uploadToGitHub(currentFilename, currentPlist);
+        statusEl.textContent = '✓ 扫码即可安装';
+        statusEl.className = 'qr-hint ok';
+        renderQRCode(publicUrl);
+    } catch (err) {
+        statusEl.textContent = '✕ ' + err.message;
+        statusEl.className = 'qr-hint err';
+        document.getElementById('qrcodeBox').innerHTML = '';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '生成并上传';
+    }
+});
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+function copyContent() {
+    if (!currentPlist) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentPlist)
+            .then(() => showToast('已复制内容'))
+            .catch(() => fallbackCopy(currentPlist));
+    } else {
+        fallbackCopy(currentPlist);
+    }
+}
+
+function copyLink() {
+    const el = document.getElementById('qrcodeBox').querySelector('canvas, img');
+    if (!el) { showToast('暂无链接'); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentUrl)
+            .then(() => showToast('已复制链接'))
+            .catch(() => fallbackCopy(currentUrl));
+    } else {
+        fallbackCopy(currentUrl);
+    }
+}
+
+let currentUrl = '';
+const _origRender = renderQRCode;
+renderQRCode = function(url) { currentUrl = url; _origRender(url); };
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text; textarea.style.position = 'fixed'; textarea.style.left = '-9999px';
+    document.body.appendChild(textarea); textarea.select();
+    try { document.execCommand('copy'); showToast('已复制'); } catch (e) {}
+    document.body.removeChild(textarea);
+}
+</script>
+</body>
+</html>
