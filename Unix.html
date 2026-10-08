@@ -410,9 +410,11 @@
     <div id="copyToast" style="display:none;" class="copy-toast">✅ 已复制到剪贴板</div>
 
     <script>
-        // 动态卡片初始值 (秒基、毫秒基)
-        let dynamicSec = 1772909755;      // 起始秒
-        let dynamicMs = 1770465600000;    // 起始毫秒
+        // ============================================================
+        // 【修复1】动态卡片初始值改为获取当前真实时间
+        // ============================================================
+        let dynamicSec = Math.floor(Date.now() / 1000);  // 当前秒级时间戳
+        let dynamicMs = Date.now();                       // 当前毫秒级时间戳
 
         let refreshInterval;
         let isAutoRefreshing = false;
@@ -436,10 +438,11 @@
 
         // 每秒更新两个卡片 (同时动态+1)
         function updateBothCards() {
-            // 秒戳每秒 +1
-            dynamicSec += 1;
-            // 毫秒戳每秒 +1000 (保持与真实时间流逝一致)
-            dynamicMs += 1000;
+            // ============================================================
+            // 【修复2】直接基于真实 Date.now() 重新赋值，防止累积漂移
+            // ============================================================
+            dynamicSec = Math.floor(Date.now() / 1000);
+            dynamicMs = Date.now();
 
             // 更新显示
             document.getElementById('dynamicSecValue').innerText = dynamicSec;
@@ -449,16 +452,13 @@
             const secDate = new Date(dynamicSec * 1000);
             document.getElementById('dynamicSecDate').innerText = formatFullDate(secDate);
 
-            // 毫秒卡片显示北京时间 (与长窗口风格保持一致：用GMT+8)
-            const msDate = new Date(dynamicMs); // 直接作为毫秒时间戳
-            const beijingDate = new Date(msDate.getTime() + 8 * 3600 * 1000);
-            const bjStr = beijingDate.getUTCFullYear() + '-' + 
-                (beijingDate.getUTCMonth()+1).toString().padStart(2,'0') + '-' +
-                beijingDate.getUTCDate().toString().padStart(2,'0') + ' ' +
-                beijingDate.getUTCHours().toString().padStart(2,'0') + ':' +
-                beijingDate.getUTCMinutes().toString().padStart(2,'0') + ':' +
-                beijingDate.getUTCSeconds().toString().padStart(2,'0');
-            document.getElementById('dynamicMsDate').innerText = bjStr;
+            // ============================================================
+            // 【修复3】毫秒卡片日期显示逻辑统一，直接使用 formatFullDate
+            // ============================================================
+            document.getElementById('dynamicMsDate').innerText = formatFullDate(new Date(dynamicMs));
+
+            // 同步更新长窗口
+            updateLongAnalysisWindow();
         }
 
         function formatFullDate(d) {
@@ -505,14 +505,12 @@
                 updateTimeDisplay(now);
             }
             updateRefreshStatus();
-            // 关键：让两个动态卡片也同步真实流逝 (基于现实时间重新校准? 但为了保持连续性，采用增加方式更连贯)
-            // 我们采用外部增量方式，已经在setInterval调用updateBothCards, 但为了防止漂移，也可以校准。
-            // 此处不校准，只保持增量。
         }
 
         function startAutoRefresh() {
             if (!isAutoRefreshing) {
                 updateCurrentTimestamp();
+                updateBothCards(); // 立即执行一次
                 // 同时启动两个定时器: 一个用于下方实时戳(每秒)，一个用于双卡更新(每秒)
                 refreshInterval = setInterval(() => {
                     updateCurrentTimestamp();   // 原来的实时戳
@@ -617,17 +615,27 @@
                 e.style.color = "#e74c3c";
             }
         }
+        // 初始化长窗口
         function fillLongAnalysisWindow() {
-            const ms = 1770465600000;
-            const sec = Math.floor(ms/1000);
+            updateLongAnalysisWindow();
+        }
+        // ============================================================
+        // 【修复4】长窗口动态更新，使用 dynamicMs 实时值
+        // ============================================================
+        function updateLongAnalysisWindow() {
+            const ms = dynamicMs;
+            const sec = Math.floor(ms / 1000);
             document.getElementById('longMsValue').innerText = ms;
             document.getElementById('longSecValue').innerText = sec;
-            const gmt = new Date(sec*1000);
+
+            const gmt = new Date(sec * 1000);
+            const bj = new Date(sec * 1000 + 8 * 3600 * 1000);
             const week = ['周日','周一','周二','周三','周四','周五','周六'];
+
             document.getElementById('gmtTimeDisplay').innerText = 
                 gmt.getUTCFullYear()+'-'+(gmt.getUTCMonth()+1).toString().padStart(2,'0')+'-'+gmt.getUTCDate().toString().padStart(2,'0')+' '+
                 gmt.getUTCHours().toString().padStart(2,'0')+':'+gmt.getUTCMinutes().toString().padStart(2,'0')+':'+gmt.getUTCSeconds().toString().padStart(2,'0')+' '+week[gmt.getUTCDay()];
-            const bj = new Date(sec*1000 + 8*3600*1000);
+
             document.getElementById('cstTimeDisplay').innerText = 
                 bj.getUTCFullYear()+'-'+(bj.getUTCMonth()+1).toString().padStart(2,'0')+'-'+bj.getUTCDate().toString().padStart(2,'0')+' '+
                 bj.getUTCHours().toString().padStart(2,'0')+':'+bj.getUTCMinutes().toString().padStart(2,'0')+':'+bj.getUTCSeconds().toString().padStart(2,'0')+' '+week[bj.getUTCDay()];
