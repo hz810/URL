@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 在线运行工具</title>
+    <link rel="shortcut icon" type="image/ico" href="img/18.webp">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+        body { background: #0d1117; display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #e6edf3; }
+        .toolbar { display: flex; align-items: center; justify-content: flex-start; padding: 12px 20px; background: #161b22; border-bottom: 1px solid #30363d; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); z-index: 10; flex-shrink: 0; }
+        .toolbar-title { font-size: 18px; font-weight: 600; background: linear-gradient(135deg, #79c0ff, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0; }
+        .toolbar-title::before { content: "⚡"; font-size: 22px; background: none; -webkit-text-fill-color: #f0b429; }
+        .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-start; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 18px; border: 1px solid #30363d; border-radius: 30px; background: #21262d; color: #e6edf3; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); min-width: 110px; justify-content: center; text-align: center; user-select: none; }
+        .btn:hover { background: #30363d; border-color: #8b949e; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); background: #3c444d; }
+        .btn-primary { background: #238636; border-color: #2ea043; color: white; font-weight: 600; }
+        .btn-primary:hover { background: #2ea043; border-color: #3fb950; }
+        .btn-outline { background: transparent; border-color: #484f58; }
+        .btn-outline:hover { background: #21262d; border-color: #6e7681; }
+        .btn i { font-style: normal; font-size: 16px; }
+        .btn-format { border-color: #6e40c9; background: #1c1530; color: #d2b3ff; }
+        .btn-format:hover { background: #2d1f4a; border-color: #a78bfa; box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); }
+        .btn-clear { border-color: #6e2d2d; background: #1c1010; color: #ff9c9c; }
+        .btn-clear:hover { background: #2d1616; border-color: #f85149; color: #ffb3b3; box-shadow: 0 0 10px rgba(248, 81, 73, 0.3); }
+        .btn-toggle-snippet { border-color: #1f6feb; background: #0d1a2b; color: #79c0ff; min-width: 100px; }
+        .btn-toggle-snippet:hover { background: #132338; border-color: #58a6ff; color: #a5d6ff; box-shadow: 0 0 10px rgba(88, 166, 255, 0.25); }
+
+        .snippet-panel { background: #0f141b; border-bottom: 1px solid #21262d; flex-shrink: 0; overflow: hidden; transition: max-height 0.25s ease; scrollbar-width: thin; scrollbar-color: #484f58 #0f141b; }
+        .snippet-panel.collapsed { max-height: 42px; overflow: hidden; }
+        .snippet-panel.expanded { max-height: 50vh; overflow-y: auto; }
+        .snippet-panel::-webkit-scrollbar { width: 10px; }
+        .snippet-panel::-webkit-scrollbar-track { background: #0f141b; }
+        .snippet-panel::-webkit-scrollbar-thumb { background: #484f58; border-radius: 5px; }
+        .snippet-panel::-webkit-scrollbar-thumb:hover { background: #6e7681; }
+
+        .snippet-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 20px; border-bottom: 1px solid #161b22; flex-wrap: wrap; }
+        .snippet-row:last-child { border-bottom: none; }
+
+        .snippet-group-label { flex-shrink: 0; width: 68px; font-size: 12px; font-weight: 700; color: #58a6ff; letter-spacing: 0.5px; padding-top: 5px; text-align: right; border-right: 2px solid #58a6ff; padding-right: 8px; margin-right: 4px; opacity: 0.9; }
+
+        .snippet-buttons { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; align-items: center; }
+
+        .snippet-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #30363d; border-radius: 6px; background: #1c2128; color: #c9d1d9; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; user-select: none; flex-shrink: 0; font-family: 'Fira Code', 'Consolas', monospace; }
+        .snippet-btn:hover { background: #2d333b; border-color: #58a6ff; color: #79c0ff; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(88, 166, 255, 0.15); }
+        .snippet-btn:active { transform: translateY(0); background: #373e47; }
+
+        /* 一键演示按钮 */
+        .snippet-play-btn {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 4px 8px; border: 1px solid #2ea043;
+            border-radius: 6px; background: #0d1f10; color: #7ee787;
+            font-size: 11px; font-weight: 600; cursor: pointer;
+            transition: all 0.15s ease; white-space: nowrap;
+            user-select: none; flex-shrink: 0;
+        }
+        .snippet-play-btn:hover {
+            background: #14291a; border-color: #3fb950; color: #aff5b4;
+            box-shadow: 0 0 8px rgba(46, 160, 67, 0.3);
+        }
+        .snippet-play-btn:active { transform: scale(0.96); }
+        /* 演示中：橙色 */
+        .snippet-play-btn.playing {
+            border-color: #d29922; background: #2a1f06; color: #f0b429;
+        }
+        .snippet-play-btn.playing:hover {
+            background: #3a2c08; border-color: #e3b341; color: #f7c948;
+            box-shadow: 0 0 8px rgba(210, 153, 34, 0.3);
+        }
+        /* 暂停中：灰蓝色 */
+        .snippet-play-btn.paused {
+            border-color: #484f58; background: #1c2128; color: #8b949e;
+        }
+        .snippet-play-btn.paused:hover {
+            background: #2d333b; border-color: #6e7681; color: #c9d1d9;
+            box-shadow: none;
+        }
+
+        .auto-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; transition: all 0.25s ease; white-space: nowrap; border: 1px solid; min-width: 130px; justify-content: center; }
+        .auto-toggle.on { background: rgba(35, 134, 54, 0.2); border-color: #2ea043; color: #7ee787; box-shadow: 0 0 12px rgba(46, 160, 67, 0.25); }
+        .auto-toggle.on:hover { background: rgba(35, 134, 54, 0.3); box-shadow: 0 0 16px rgba(46, 160, 67, 0.4); }
+        .auto-toggle.off { background: rgba(210, 153, 34, 0.15); border-color: #d29922; color: #f0b429; }
+        .auto-toggle.off:hover { background: rgba(210, 153, 34, 0.25); }
+        .auto-toggle .dot { width: 8px; height: 8px; border-radius: 50%; transition: all 0.25s ease; }
+        .auto-toggle.on .dot { background: #3fb950; box-shadow: 0 0 8px #3fb950; animation: pulse 1.5s ease-in-out infinite; }
+        .auto-toggle.off .dot { background: #d29922; box-shadow: none; animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.75); } }
+        .status-msg { font-size: 12px; color: #7ee787; opacity: 0; transition: opacity 0.3s; white-space: nowrap; min-width: 130px; text-align: left; }
+        .status-msg.show { opacity: 1; }
+        .main-container { display: flex; flex: 1; overflow: hidden; background: #0d1117; }
+        .editor-panel { flex: 1; display: flex; flex-direction: column; min-width: 260px; background: #0d1117; border-right: 1px solid #30363d; }
+        .preview-panel { flex: 1; display: flex; flex-direction: column; background: #0d1117; min-width: 260px; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 40px; min-height: 40px; background: #161b22; border-bottom: 1px solid #30363d; font-size: 13px; font-weight: 500; color: #8b949e; letter-spacing: 0.5px; flex-shrink: 0; }
+        .panel-header span { display: flex; align-items: center; gap: 6px; line-height: 1; }
+        .panel-header .editor-icon::before { content: "📝"; font-size: 15px; }
+        .panel-header .preview-icon::before { content: "👁️"; font-size: 15px; }
+        .preview-actions { display: flex; gap: 8px; align-items: center; }
+        .preview-actions .btn { padding: 0 12px; height: 26px; font-size: 12px; border-radius: 13px; background: #21262d; min-width: auto; line-height: 1; }
+        .code-editor { flex: 1; width: 100%; padding: 20px; background: #0d1117; color: #c9d1d9; font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.6; border: none; outline: none; resize: none; tab-size: 2; overflow: auto; white-space: pre; caret-color: #79c0ff; letter-spacing: 0.2px; }
+        .code-editor::placeholder { color: #484f58; }
+        .code-editor::selection { background: #2f4f6f; }
+        .code-editor::-webkit-scrollbar { width: 20px; height: 20px; }
+        .code-editor::-webkit-scrollbar-track { background: #161b22; border-radius: 10px; }
+        .code-editor::-webkit-scrollbar-thumb { background: #6e7681; border-radius: 10px; border: 4px solid #161b22; min-height: 80px; min-width: 80px; }
+        .code-editor::-webkit-scrollbar-thumb:hover { background: #8b949e; border-color: #21262d; }
+        .code-editor::-webkit-scrollbar-thumb:active { background: #c9d1d9; }
+        .code-editor::-webkit-scrollbar-corner { background: #161b22; }
+        .code-editor::-webkit-scrollbar-button { display: none; }
+        .code-editor { scrollbar-width: auto; scrollbar-color: #6e7681 #161b22; }
+        .preview-iframe { flex: 1; width: 100%; background: #0d1117; border: none; outline: none; display: block; color-scheme: dark; }
+        @media (max-width: 820px) { .toolbar { flex-direction: column; align-items: flex-start; gap: 10px; } .toolbar-actions { justify-content: flex-start; gap: 8px; } .status-msg { min-width: auto; text-align: left; } .snippet-group-label { width: 56px; font-size: 11px; } }
+        @media (max-width: 640px) { .main-container { flex-direction: column; } .editor-panel { border-right: none; border-bottom: 1px solid #30363d; max-height: 45vh; } .preview-panel { max-height: 55vh; } .btn { padding: 6px 14px; font-size: 13px; min-width: 90px; } .toolbar-title { font-size: 16px; } .auto-toggle { min-width: 110px; padding: 6px 12px; font-size: 12px; } .snippet-row { padding: 5px 12px; } }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-title">HTML 在线运行工具</div>
+        <div class="toolbar-actions">
+            <div class="auto-toggle on" id="autoToggle" title="点击暂停/开启自动运行">
+                <span class="dot"></span>
+                <span id="autoToggleText">自动运行中</span>
+            </div>
+            <button class="btn btn-primary" id="runBtn" title="强制刷新 (Ctrl+Enter)"><i>▶</i> 运行预览</button>
+            <button class="btn btn-outline" id="newWindowBtn" title="在新窗口打开预览"><i>⧉</i> 新窗口运行</button>
+            <button class="btn btn-outline" id="copyBtn" title="复制编辑器中的代码"><i>📋</i> 复制代码</button>
+            <button class="btn btn-outline" id="downloadBtn" title="下载为 HTML 文件"><i>⬇️</i> 下载 HTML</button>
+            <button class="btn btn-format" id="formatBtn" title="整理 HTML 标签换行（不破坏运行）"><i>⏎</i> 整理换行</button>
+            <button class="btn btn-clear" id="clearBtn" title="清空编辑器"><i>🗑</i> 一键清空</button>
+            <button class="btn btn-toggle-snippet" id="toggleSnippetBtn" title="展开/收起常用代码">
+                <i>📂</i> <span id="toggleSnippetText">展开代码</span>
+            </button>
+            <span id="statusMsg" class="status-msg"></span>
+        </div>
+    </div>
+
+    <div class="snippet-panel collapsed" id="snippetPanel"></div>
+
+    <div class="main-container">
+        <div class="editor-panel">
+            <div class="panel-header">
+                <span class="editor-icon">HTML 代码编辑器</span>
+                <span></span>
+            </div>
+            <textarea id="codeEditor" class="code-editor" spellcheck="false" placeholder="在此输入 HTML、CSS、JavaScript..."></textarea>
+        </div>
+        <div class="preview-panel">
+            <div class="panel-header">
+                <span class="preview-icon">实时预览</span>
+                <div class="preview-actions">
+                    <button class="btn" id="refreshPreviewBtn" title="刷新预览">↻ 刷新</button>
+                </div>
+            </div>
+            <iframe id="previewFrame" class="preview-iframe" sandbox="allow-scripts allow-modals allow-forms allow-popups allow-same-origin" title="预览"></iframe>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var editor = document.getElementById('codeEditor');
+            var previewFrame = document.getElementById('previewFrame');
+            var runBtn = document.getElementById('runBtn');
+            var newWindowBtn = document.getElementById('newWindowBtn');
+            var copyBtn = document.getElementById('copyBtn');
+            var downloadBtn = document.getElementById('downloadBtn');
+            var refreshPreviewBtn = document.getElementById('refreshPreviewBtn');
+            var formatBtn = document.getElementById('formatBtn');
+            var clearBtn = document.getElementById('clearBtn');
+            var toggleSnippetBtn = document.getElementById('toggleSnippetBtn');
+            var toggleSnippetText = document.getElementById('toggleSnippetText');
+            var statusMsg = document.getElementById('statusMsg');
+            var autoToggle = document.getElementById('autoToggle');
+            var autoToggleText = document.getElementById('autoToggleText');
+            var snippetPanel = document.getElementById('snippetPanel');
+
+            var autoRunEnabled = true;
+            var lastRenderedCode = '';
+            var statusTimeout;
+            var snippetExpanded = false;
+
+            // ============ 演示控制 ============
+            var playTimer = null;
+            var playIndex = 0;
+            var playItems = null;
+            var playGroupName = '';
+            var playPaused = false;
+            var playBtnRef = null;
+
+            function showStatus(message, isError) {
+                statusMsg.textContent = message;
+                statusMsg.style.color = isError ? '#f85149' : '#7ee787';
+                statusMsg.classList.add('show');
+                clearTimeout(statusTimeout);
+                statusTimeout = setTimeout(function() { statusMsg.classList.remove('show'); }, 2500);
+            }
+
+            function getNowDate() {
+                var d = new Date();
+                var y = d.getFullYear();
+                var m = d.getMonth() + 1;
+                var day = d.getDate();
+                if (m < 10) m = '0' + m;
+                if (day < 10) day = '0' + day;
+                return y + '年' + m + '月' + day + '日';
+            }
+
+            function updatePreview(force) {
+                var code = editor.value;
+                if (!force && code === lastRenderedCode) return;
+                lastRenderedCode = code;
+                if (!code.trim()) {
+                    previewFrame.srcdoc = '\x3C!DOCTYPE html\x3E\x3Chtml\x3E\x3Chead\x3E\x3Cmeta charset="UTF-8"\x3E\x3Cstyle\x3Ehtml,body{margin:0;padding:0;height:100%;background:#0d1117;}\x3C/style\x3E\x3C/head\x3E\x3Cbody\x3E\x3C/body\x3E\x3C/html\x3E';
+                } else {
+                    previewFrame.srcdoc = code;
+                }
+            }
+
+            editor.addEventListener('input', function() {
+                if (autoRunEnabled) updatePreview();
+            });
+
+            autoToggle.addEventListener('click', function() {
+                autoRunEnabled = !autoRunEnabled;
+                if (autoRunEnabled) {
+                    autoToggle.classList.remove('off');
+                    autoToggle.classList.add('on');
+                    autoToggleText.textContent = '自动运行中';
+                    updatePreview(true);
+                    showStatus('自动运行已开启');
+                } else {
+                    autoToggle.classList.remove('on');
+                    autoToggle.classList.add('off');
+                    autoToggleText.textContent = '已暂停自动';
+                    showStatus('自动运行已暂停');
+                }
+            });
+
+            function runPreview() { updatePreview(true); showStatus('预览已更新'); }
+            function openInNewWindow() {
+                var blob = new Blob([editor.value], { type: 'text/html' });
+                var url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+                showStatus('已在新窗口打开');
+            }
+            function copyCode() {
+                navigator.clipboard.writeText(editor.value).then(function() {
+                    showStatus('代码已复制到剪贴板');
+                }).catch(function() {
+                    editor.select();
+                    document.execCommand('copy');
+                    editor.setSelectionRange(0, 0);
+                    showStatus('代码已复制 (兼容模式)');
+                });
+            }
+            function downloadHTML() {
+                var blob = new Blob([editor.value], { type: 'text/html' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'online-preview.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showStatus('开始下载 HTML 文件');
+            }
+            function refreshPreview() { updatePreview(true); showStatus('预览已刷新'); }
+
+            function clearEditor() {
+                stopPlay();
+                if (!editor.value.trim()) {
+                    showStatus('编辑器已是空的', true);
+                    return;
+                }
+                editor.value = '';
+                lastRenderedCode = '';
+                updatePreview(true);
+                editor.focus();
+                showStatus('🗑 已清空编辑器');
+            }
+
+            function toggleSnippet() {
+                snippetExpanded = !snippetExpanded;
+                if (snippetExpanded) {
+                    snippetPanel.classList.remove('collapsed');
+                    snippetPanel.classList.add('expanded');
+                    toggleSnippetText.textContent = '收起代码';
+                    toggleSnippetBtn.querySelector('i').textContent = '📁';
+                } else {
+                    snippetPanel.classList.remove('expanded');
+                    snippetPanel.classList.add('collapsed');
+                    toggleSnippetText.textContent = '展开代码';
+                    toggleSnippetBtn.querySelector('i').textContent = '📂';
+                }
+            }
+
+            toggleSnippetBtn.addEventListener('click', toggleSnippet);
+
+            // ================================================================
+            // 一键演示：支持点击暂停 / 再点击继续
+            // ================================================================
+            function stopPlay() {
+                if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+                if (playBtnRef) {
+                    playBtnRef.classList.remove('playing');
+                    playBtnRef.classList.remove('paused');
+                }
+                playItems = null;
+                playIndex = 0;
+                playPaused = false;
+                playBtnRef = null;
+            }
+
+            function updatePlayBtnText() {
+                if (!playBtnRef) return;
+                if (playPaused) {
+                    playBtnRef.textContent = '⏸ 已暂停停';
+                    playBtnRef.classList.remove('playing');
+                    playBtnRef.classList.add('paused');
+                } else {
+                    playBtnRef.textContent = '⏸ 演示中中';
+                    playBtnRef.classList.remove('paused');
+                    playBtnRef.classList.add('playing');
+                }
+            }
+
+            function playStep() {
+                if (!playItems || playPaused) return;
+                if (playIndex >= playItems.length) {
+                    if (playBtnRef) {
+                        playBtnRef.textContent = '▶ 一键演示';
+                        playBtnRef.classList.remove('playing');
+                        playBtnRef.classList.remove('paused');
+                    }
+                    showStatus('✅ ' + playGroupName + ' 一组演示完毕（共 ' + playItems.length + ' 个）');
+                    playTimer = null;
+                    playItems = null;
+                    playIndex = 0;
+                    playBtnRef = null;
+                    playPaused = false;
+                    return;
+                }
+
+                var item = playItems[playIndex];
+                var text = item.getInsert ? item.getInsert() : item.insert;
+                editor.value = text;
+                lastRenderedCode = text;
+                previewFrame.srcdoc = text;
+                showStatus('▶ ' + (playIndex + 1) + '/' + playItems.length + '：' + item.label);
+                playIndex++;
+                playTimer = setTimeout(playStep, 900);
+            }
+
+            function togglePlayGroup(groupItems, groupName, btn) {
+                // 如果正在演示同一组
+                if (playItems === groupItems && playBtnRef === btn) {
+                    if (playPaused) {
+                        // 继续
+                        playPaused = false;
+                        updatePlayBtnText();
+                        showStatus('▶ 继续演示：' + groupName);
+                        playTimer = setTimeout(playStep, 300);
+                    } else {
+                        // 暂停
+                        playPaused = true;
+                        if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+                        updatePlayBtnText();
+                        showStatus('⏸ 已暂停停：' + groupName);
+                    }
+                    return;
+                }
+
+                // 停止上一次演示
+                stopPlay();
+
+                // 开始新演示
+                playItems = groupItems;
+                playIndex = 0;
+                playGroupName = groupName;
+                playPaused = false;
+                playBtnRef = btn;
+                updatePlayBtnText();
+                showStatus('▶ 开始演示：' + groupName);
+                playStep();
+            }
+
+            // ================================================================
+            // 常用代码快捷插入
+            // ================================================================
+            var SNIPPETS = [
+                { group: '常用', items: [
+                    { label: '居中',       insert: '\x3Ccenter\x3E这里放内容\x3C/center\x3E' },
+                    { label: '换行',       insert: '\x3Cbr\x3E' },
+                    { label: '注释',       insert: '\x3C!-- 注释内容 --\x3E' },
+                    { label: '块注释',     insert: '/*/ 注释内容 /*/' },
+                    { label: '贴图',       insert: '\x3Cimg src="图片链接" alt="图片"\x3E' },
+                    { label: '链接',       insert: '\x3Ca href="所要链接的地址"\x3E显示文字\x3C/a\x3E' },
+                    { label: '走马灯',     insert: '\x3Cmarquee\x3E需要滚动的字\x3C/marquee\x3E' },
+                    { label: '弹来弹去',   insert: '\x3Cmarquee width=400 behavior=alternate direction=left align=middle\x3E弹来弹去跑马灯!\x3C/marquee\x3E' },
+                    { label: '加粗',       insert: '\x3Cb\x3E需要加粗的字\x3C/b\x3E' },
+                    { label: '变大',       insert: '\x3Cbig\x3E需要变大的字\x3C/big\x3E' },
+                    { label: '变色',       insert: '\x3Cfont color="#ff0000"\x3E变色文字\x3C/font\x3E' },
+                    { label: '背景图',     insert: '\x3Cbody background="背景图片链接"\x3E' },
+                    { label: '背景色',     insert: '\x3Cbody bgcolor="#ff0000"\x3E' },
+                    { label: 'CSS背景图',  insert: 'background-image: url(.png);' },
+                    { label: '图标',       insert: '\x3Clink rel="shortcut icon" type="image/ico" href="favicon.ico"\x3E' },
+                    { label: 'meta',       insert: '\x3Cmeta charset="UTF-8"\x3E' },
+                    { label: '禁止右键',   insert: '\x3Cscript language="Javascript"\x3E\ndocument.oncontextmenu=new Function("event.returnValue=false");\ndocument.onselectstart=new Function("event.returnValue=false");\n\x3C/script\x3E' },
+                    { label: '允许跨越',   insert: '\x3Cmeta name="referrer" content="never"\x3E' },
+                    { label: 'style',      insert: '\x3Cstyle\x3E\n  /* CSS 写在这里 */\n\x3C/style\x3E' },
+                    { label: 'script',     insert: '\x3Cscript\x3E\n  // JS 写在这里\n\x3C/script\x3E' },
+                    { label: '外链JS',     insert: '\x3Cscript src="js文件链接"\x3E\x3C/script\x3E' },
+                    { label: '外链CSS',    insert: '\x3Clink href="css文件链接" rel="stylesheet"\x3E' },
+                    { label: '版权HTML',   getInsert: function() {
+                        return '\x3C!-- \n编写：宏仔 \n时间：' + getNowDate() + '\n版权归属：宏仔网络 \n联系作者：QQ:810331109 \n所有代码均独立编写，谢绝一切形式的盗站行为！！ \n--\x3E';
+                    }},
+                    { label: '版权CSS/JS', getInsert: function() {
+                        return '/*! \n编写：宏仔 \n时间：' + getNowDate() + '\n版权归属：宏仔网络 \n联系作者：QQ:810331109 \n所有代码均独立编写，谢绝一切形式的盗站行为！！ \n*/';
+                    }},
+                    { label: '版权PHP',    getInsert: function() {
+                        return '##  编写：宏仔 \n##  时间：' + getNowDate() + '\n##  版权归属：宏仔网络 \n##  联系作者：QQ:810331109 \n##  所有代码均独立编写，谢绝一切形式的盗站行为！！ \n';
+                    }}
+                ]},
+
+                { group: '广告位', items: [
+                    { label: '单图广告',   insert: '\x3Ca href="跳转链接" target="_blank"\x3E\x3Cimg src="广告图片地址" alt="广告" width="100%"\x3E\x3C/a\x3E' },
+                    { label: '文字广告',   insert: '\x3Ca href="跳转链接" target="_blank" style="color: #ff0000; font-size: 16px; font-weight: bold;"\x3E广告文字\x3C/a\x3E' },
+                    { label: '图文广告',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:flex; align-items:center; gap:10px; text-decoration:none; color:#333;"\x3E\x3Cimg src="广告图片地址" width="80" height="80"\x3E\x3Cdiv\x3E\x3Cdiv style="font-size:16px; font-weight:bold;"\x3E广告标题\x3C/div\x3E\x3Cdiv style="font-size:12px; color:#999;"\x3E广告描述文字\x3C/div\x3E\x3C/div\x3E\x3C/a\x3E' },
+                    { label: '两排图广告', insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '三排图广告', insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转3" target="_blank"\x3E\x3Cimg src="图片3" width="100%"\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '四排图广告', insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转3" target="_blank"\x3E\x3Cimg src="图片3" width="100%"\x3E\x3C/a\x3E\x3Ca href="跳转4" target="_blank"\x3E\x3Cimg src="图片4" width="100%"\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '两排图文',   insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3Cdiv style="font-size:14px; padding:5px 0;"\x3E文字1\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3Cdiv style="font-size:14px; padding:5px 0;"\x3E文字2\x3C/div\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '三排图文',   insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3Cdiv style="font-size:14px; padding:5px 0;"\x3E文字1\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3Cdiv style="font-size:14px; padding:5px 0;"\x3E文字2\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转3" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片3" width="100%"\x3E\x3Cdiv style="font-size:14px; padding:5px 0;"\x3E文字3\x3C/div\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '四排图文',   insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px;"\x3E\x3Ca href="跳转1" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片1" width="100%"\x3E\x3Cdiv style="font-size:12px; padding:5px 0;"\x3E文字1\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转2" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片2" width="100%"\x3E\x3Cdiv style="font-size:12px; padding:5px 0;"\x3E文字2\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转3" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片3" width="100%"\x3E\x3Cdiv style="font-size:12px; padding:5px 0;"\x3E文字3\x3C/div\x3E\x3C/a\x3E\x3Ca href="跳转4" target="_blank" style="text-decoration:none; color:#333; display:block;"\x3E\x3Cimg src="图片4" width="100%"\x3E\x3Cdiv style="font-size:12px; padding:5px 0;"\x3E文字4\x3C/div\x3E\x3C/a\x3E\x3C/div\x3E' },
+                    { label: '彩色文字',   insert: '\x3Ca href="跳转链接" target="_blank" style="background: linear-gradient(to right, #ff0000, #ff9900); -webkit-background-clip: text; color: transparent; font-weight: bold; font-size: 18px;"\x3E彩色渐变文字广告\x3C/a\x3E' },
+                    { label: '背景框广告', insert: '\x3Ca href="跳转链接" target="_blank" style="display:block; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; padding:15px; border-radius:10px; text-decoration:none; text-align:center; font-size:16px; font-weight:bold;"\x3E点击进入活动页面\x3C/a\x3E' },
+                    { label: '边框广告',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:block; border:2px solid #ff0000; padding:10px; text-align:center; color:#ff0000; text-decoration:none; border-radius:8px;"\x3E限时活动 点击查看\x3C/a\x3E' },
+                    { label: '阴影广告',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:block; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding:15px; text-align:center; text-decoration:none; color:#333; border-radius:8px;"\x3E\x3Cimg src="广告图片地址" width="100%"\x3E\x3Cdiv style="margin-top:8px;"\x3E广告标题文字\x3C/div\x3E\x3C/a\x3E' },
+                    { label: '悬停放大',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:inline-block; overflow:hidden; border-radius:8px;"\x3E\x3Cimg src="广告图片地址" width="100%" style="transition: transform 0.3s;" onmouseover="this.style.transform=\'scale(1.1)\'" onmouseout="this.style.transform=\'scale(1)\'"\x3E\x3C/a\x3E' },
+                    { label: '浮动广告',   insert: '\x3Ca href="跳转链接" target="_blank" style="position:fixed; right:20px; bottom:20px; z-index:9999;"\x3E\x3Cimg src="广告图片地址" width="120"\x3E\x3C/a\x3E' },
+                    { label: '顶部横幅',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:block; width:100%;"\x3E\x3Cimg src="广告图片地址" width="100%" height="60"\x3E\x3C/a\x3E' },
+                    { label: '底部横幅',   insert: '\x3Ca href="跳转链接" target="_blank" style="display:block; width:100%; margin-top:20px;"\x3E\x3Cimg src="广告图片地址" width="100%" height="60"\x3E\x3C/a\x3E' },
+                    { label: '左右两列',   insert: '\x3Cdiv style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"\x3E\x3Cdiv\x3E\x3Cimg src="左图" width="100%"\x3E\x3C/div\x3E\x3Cdiv\x3E\x3Cimg src="右图" width="100%"\x3E\x3C/div\x3E\x3C/div\x3E' },
+                    { label: '上下两行',   insert: '\x3Cdiv\x3E\x3Cimg src="上图" width="100%"\x3E\x3C/div\x3E\x3Cdiv style="margin-top:10px;"\x3E\x3Cimg src="下图" width="100%"\x3E\x3C/div\x3E' },
+                    { label: '跑马灯广告', insert: '\x3Cmarquee scrollamount="3" style="background:#fffbe6; color:#ff6600; padding:8px; border-radius:6px;"\x3E🎉 最新活动：全场满100减50，点击查看详情！\x3C/marquee\x3E' },
+                    { label: '可关闭广告', insert: '\x3Cdiv id="adBox" style="position:relative; display:inline-block;"\x3E\x3Ca href="跳转链接" target="_blank"\x3E\x3Cimg src="广告图片地址" width="200"\x3E\x3C/a\x3E\x3Cspan onclick="document.getElementById(\'adBox\').style.display=\'none\'" style="position:absolute; top:0; right:0; background:#000; color:#fff; padding:2px 6px; cursor:pointer; font-size:12px;"\x3E×\x3C/span\x3E\x3C/div\x3E' },
+                    { label: '广告容器',   insert: '\x3Cdiv class="ad-container" style="padding:10px; background:#f8f8f8; border-radius:8px; margin:10px 0;"\x3E\x3Cdiv style="font-size:12px; color:#999; margin-bottom:5px;"\x3E广告\x3C/div\x3E\x3Ca href="跳转链接" target="_blank"\x3E\x3Cimg src="广告图片地址" width="100%"\x3E\x3C/a\x3E\x3C/div\x3E' }
+                ]},
+
+                { group: '背景', items: [
+                    { label: '固定背景', insert: '\x3Cbody background="背景图片链接" bgproperties=fixed\x3E' },
+                    { label: '首页卡住', insert: '\x3Cbody style="background: #F6F6F6 url(https://ae01.alicdn.com/kf/H6f638dd70a8c48d6afd733067cd6a244d.jpg);background-repeat: no-repeat;background-attachment: fixed;"\x3E' },
+                    { label: '背景不重复', insert: '\x3Cbody background="图片链接" style="background-repeat: no-repeat;"\x3E' },
+                    { label: '背景居中',   insert: '\x3Cbody background="图片链接" style="background-position: center;"\x3E' },
+                    { label: '背景铺满',   insert: '\x3Cbody background="图片链接" style="background-size: cover;"\x3E' },
+                    { label: '背景固定',   insert: '\x3Cbody background="图片链接" style="background-attachment: fixed;"\x3E' },
+                    { label: '背景重复',   insert: '\x3Cbody background="图片链接" style="background-repeat: repeat-x;"\x3E' },
+                    { label: '透明背景',   insert: '\x3Cbody bgcolor="transparent"\x3E' },
+                    { label: 'CSS背景色',  insert: 'background-color: #ff0000;' },
+                    { label: 'CSS不重复',  insert: 'background-repeat: no-repeat;' },
+                    { label: 'CSS铺满',    insert: 'background-size: cover;' },
+                    { label: 'CSS背景渐变',insert: 'background: linear-gradient(to right, #ff0000, #0000ff);' },
+                    { label: 'CSS径向渐变',insert: 'background: radial-gradient(circle, #ff0000, #0000ff);' },
+                    { label: 'CSS阴影',    insert: 'box-shadow: 0 0 10px rgba(0,0,0,0.5);' },
+                    { label: 'CSS圆角',    insert: 'border-radius: 10px;' }
+                ]},
+
+                { group: '字体', items: [
+                    { label: '斜体',     insert: '\x3Ci\x3E需要斜体的字\x3C/i\x3E' },
+                    { label: '下划线',   insert: '\x3Cu\x3E需要下划线的字\x3C/u\x3E' },
+                    { label: '删除线',   insert: '\x3Cs\x3E需要删除线的字\x3C/s\x3E' },
+                    { label: '变小',     insert: '\x3Csmall\x3E需要变小的字\x3C/small\x3E' },
+                    { label: 'h1',       insert: '\x3Ch1\x3E标题1\x3C/h1\x3E' },
+                    { label: 'h2',       insert: '\x3Ch2\x3E标题2\x3C/h2\x3E' },
+                    { label: 'h3',       insert: '\x3Ch3\x3E标题3\x3C/h3\x3E' },
+                    { label: 'h4',       insert: '\x3Ch4\x3E标题4\x3C/h4\x3E' },
+                    { label: 'h5',       insert: '\x3Ch5\x3E标题5\x3C/h5\x3E' },
+                    { label: 'h6',       insert: '\x3Ch6\x3E标题6\x3C/h6\x3E' },
+                    { label: '下标',     insert: '\x3Csub\x3E下标\x3C/sub\x3E' },
+                    { label: '上标',     insert: '\x3Csup\x3E上标\x3C/sup\x3E' },
+                    { label: '字号1',    insert: '\x3Cfont size="1"\x3E文字\x3C/font\x3E' },
+                    { label: '字号3',    insert: '\x3Cfont size="3"\x3E文字\x3C/font\x3E' },
+                    { label: '字号5',    insert: '\x3Cfont size="5"\x3E文字\x3C/font\x3E' },
+                    { label: '字号7',    insert: '\x3Cfont size="7"\x3E文字\x3C/font\x3E' },
+                    { label: '+1号',     insert: '\x3Cfont size="+1"\x3E文字\x3C/font\x3E' },
+                    { label: '-1号',     insert: '\x3Cfont size="-1"\x3E文字\x3C/font\x3E' },
+                    { label: '基础字号', insert: '\x3Cbasefont size="3"\x3E' },
+                    { label: '粗斜体',   insert: '\x3Cb\x3E\x3Ci\x3E粗斜体\x3C/i\x3E\x3C/b\x3E' },
+                    { label: '红字',     insert: '\x3Cfont color="#ff0000"\x3E红色文字\x3C/font\x3E' },
+                    { label: '绿字',     insert: '\x3Cfont color="#00ff00"\x3E绿色文字\x3C/font\x3E' },
+                    { label: '蓝字',     insert: '\x3Cfont color="#0000ff"\x3E蓝色文字\x3C/font\x3E' },
+                    { label: '黑字',     insert: '\x3Cfont color="#000000"\x3E黑色文字\x3C/font\x3E' },
+                    { label: 'CSS字号',  insert: 'font-size: 16px;' },
+                    { label: 'CSS颜色',  insert: 'color: #ff0000;' },
+                    { label: 'CSS加粗',  insert: 'font-weight: bold;' },
+                    { label: 'CSS斜体',  insert: 'font-style: italic;' },
+                    { label: 'CSS字间距',insert: 'letter-spacing: 2px;' },
+                    { label: 'CSS行高',  insert: 'line-height: 1.8;' },
+                    { label: 'CSS居中',  insert: 'text-align: center;' },
+                    { label: 'CSS下划线',insert: 'text-decoration: underline;' },
+                    { label: 'CSS去掉线',insert: 'text-decoration: none;' }
+                ]},
+
+                { group: '结构', items: [
+                    { label: '文头',     insert: '\x3Chead\x3E\x3C/head\x3E' },
+                    { label: '主题',     insert: '\x3Ctitle\x3E主题\x3C/title\x3E' },
+                    { label: '文体',     insert: '\x3Cbody\x3E\x3C/body\x3E' },
+                    { label: '区分',     insert: '\x3Cdiv\x3E\x3C/div\x3E' },
+                    { label: '居中div',  insert: '\x3Cdiv align="center"\x3E内容\x3C/div\x3E' },
+                    { label: '引文区块', insert: '\x3Cblockquote\x3E\x3C/blockquote\x3E' },
+                    { label: '强调',     insert: '\x3Cem\x3E\x3C/em\x3E' },
+                    { label: '特别强调', insert: '\x3Cstrong\x3E\x3C/strong\x3E' },
+                    { label: '引文',     insert: '\x3Ccite\x3E\x3C/cite\x3E' },
+                    { label: '码',       insert: '\x3Ccode\x3E\x3C/code\x3E' },
+                    { label: '样本',     insert: '\x3Csamp\x3E\x3C/samp\x3E' },
+                    { label: '键盘输入', insert: '\x3Ckbd\x3E\x3C/kbd\x3E' },
+                    { label: '变数',     insert: '\x3Cvar\x3E\x3C/var\x3E' },
+                    { label: '定义',     insert: '\x3Cdfn\x3E\x3C/dfn\x3E' },
+                    { label: '地址',     insert: '\x3Caddress\x3E\x3C/address\x3E' },
+                    { label: '打字机体', insert: '\x3Ctt\x3E\x3C/tt\x3E' },
+                    { label: '闪耀',     insert: '\x3Cblink\x3E闪耀\x3C/blink\x3E' },
+                    { label: 'iframe',   insert: '\x3Ciframe src="相关地址" width="宽度" height="高度"\x3E\x3C/iframe\x3E' },
+                    { label: '框架图',   insert: '\x3Cdiv class="block" style="border: 1px solid rgb(255, 240, 245); background: url(&quot;图片地址&quot;) white; margin-top: 15px; font-size: 15px; padding: 15px; border-radius: 15px; opacity: 0.93;"\x3E\x3C/div\x3E' },
+                    { label: '水平线',   insert: '\x3Chr\x3E' },
+                    { label: '换行+水平', insert: '\x3Cbr\x3E\x3Chr\x3E' },
+                    { label: '字段集',   insert: '\x3Cfieldset\x3E\x3Clegend\x3E标题\x3C/legend\x3E\x3C/fieldset\x3E' },
+                    { label: '定义列表', insert: '\x3Cdl\x3E\x3Cdt\x3E术语\x3C/dt\x3E\x3Cdd\x3E解释\x3C/dd\x3E\x3C/dl\x3E' },
+                    { label: '无序列表', insert: '\x3Cul\x3E\x3Cli\x3E项目1\x3C/li\x3E\x3Cli\x3E项目2\x3C/li\x3E\x3C/ul\x3E' },
+                    { label: '有序列表', insert: '\x3Col\x3E\x3Cli\x3E项目1\x3C/li\x3E\x3Cli\x3E项目2\x3C/li\x3E\x3C/ol\x3E' },
+                    { label: '表格',     insert: '\x3Ctable border="1"\x3E\x3Ctr\x3E\x3Cth\x3E表头\x3C/th\x3E\x3C/tr\x3E\x3Ctr\x3E\x3Ctd\x3E内容\x3C/td\x3E\x3C/tr\x3E\x3C/table\x3E' },
+                    { label: '表格行',   insert: '\x3Ctr\x3E\x3Ctd\x3E内容\x3C/td\x3E\x3C/tr\x3E' },
+                    { label: 'span',     insert: '\x3Cspan\x3E文字\x3C/span\x3E' },
+                    { label: '按钮',     insert: '\x3Cbutton\x3E按钮\x3C/button\x3E' },
+                    { label: '表单',     insert: '\x3Cform action="" method="post"\x3E\x3C/form\x3E' },
+                    { label: '文本框',   insert: '\x3Cinput type="text" name="" value="" placeholder="请输入"\x3E' },
+                    { label: '密码框',   insert: '\x3Cinput type="password" name="" placeholder="密码"\x3E' },
+                    { label: '提交按钮', insert: '\x3Cinput type="submit" value="提交"\x3E' },
+                    { label: '重置按钮', insert: '\x3Cinput type="reset" value="重置"\x3E' },
+                    { label: '普通按钮', insert: '\x3Cinput type="button" value="点击"\x3E' },
+                    { label: '单选',     insert: '\x3Cinput type="radio" name="sex" value="男"\x3E男' },
+                    { label: '复选',     insert: '\x3Cinput type="checkbox" name="like" value="1"\x3E喜欢' },
+                    { label: '下拉框',   insert: '\x3Cselect name=""\x3E\x3Coption value="1"\x3E选项1\x3C/option\x3E\x3Coption value="2"\x3E选项2\x3C/option\x3E\x3C/select\x3E' },
+                    { label: '文本域',   insert: '\x3Ctextarea rows="4" cols="30"\x3E\x3C/textarea\x3E' },
+                    { label: '文件上传', insert: '\x3Cinput type="file" name=""\x3E' },
+                    { label: '隐藏域',   insert: '\x3Cinput type="hidden" name="" value=""\x3E' },
+                    { label: '标签',     insert: '\x3Clabel\x3E标签\x3C/label\x3E' },
+                    { label: '居中',     insert: '\x3Ccenter\x3E内容\x3C/center\x3E' },
+                    { label: '段落',     insert: '\x3Cp\x3E段落\x3C/p\x3E' }
+                ]},
+
+                { group: '多媒体', items: [
+                    { label: '贴音乐',   insert: '\x3Cembed src="音乐地址" width="宽度" height="高度" autostart=false\x3E' },
+                    { label: '贴Flash',  insert: '\x3Cembed src="flash地址" width="宽度" height="高度"\x3E' },
+                    { label: '背景音乐', insert: '\x3Cbgsound src="背景音乐地址" loop=infinite\x3E' },
+                    { label: '隐藏音乐', insert: '\x3Caudio autoplay loop\x3E \x3Csource src="？？？" type="audio/mpeg"\x3E \x3C/audio\x3E' },
+                    { label: '音频标签', insert: '\x3Caudio controls\x3E\x3Csource src="音频地址" type="audio/mpeg"\x3E\x3C/audio\x3E' },
+                    { label: '音频循环', insert: '\x3Caudio controls loop autoplay\x3E\x3Csource src="音频地址" type="audio/mpeg"\x3E\x3C/audio\x3E' },
+                    { label: '视频标签', insert: '\x3Cvideo width="400" controls\x3E\x3Csource src="视频地址" type="video/mp4"\x3E\x3C/video\x3E' },
+                    { label: '视频自动', insert: '\x3Cvideo width="400" autoplay loop muted\x3E\x3Csource src="视频地址" type="video/mp4"\x3E\x3C/video\x3E' },
+                    { label: '视频海报', insert: '\x3Cvideo width="400" controls poster="海报地址"\x3E\x3Csource src="视频地址" type="video/mp4"\x3E\x3C/video\x3E' },
+                    { label: '图片映射', insert: '\x3Cimg src="图片地址" usemap="#map1"\x3E\x3Cmap name="map1"\x3E\x3Carea shape="rect" coords="0,0,100,100" href="链接"\x3E\x3C/map\x3E' },
+                    { label: '图片尺寸', insert: '\x3Cimg src="图片地址" width="200" height="150"\x3E' },
+                    { label: '图片边框', insert: '\x3Cimg src="图片地址" border="0"\x3E' },
+                    { label: '图片提示', insert: '\x3Cimg src="图片地址" alt="提示文字" title="悬停提示"\x3E' },
+                    { label: '图片居中', insert: '\x3Cdiv align="center"\x3E\x3Cimg src="图片地址"\x3E\x3C/div\x3E' },
+                    { label: '图片边框', insert: '\x3Cimg src="图片地址" style="border: 2px solid #ff0000;"\x3E' },
+                    { label: '图片圆角', insert: '\x3Cimg src="图片地址" style="border-radius: 10px;"\x3E' },
+                    { label: '图片圆形', insert: '\x3Cimg src="图片地址" style="border-radius: 50%;"\x3E' },
+                    { label: '音频外链', insert: '\x3Caudio src="音频地址" controls\x3E\x3C/audio\x3E' },
+                    { label: '视频外链', insert: '\x3Cvideo src="视频地址" controls\x3E\x3C/video\x3E' },
+                    { label: 'Flash对象',insert: '\x3Cobject type="application/x-shockwave-flash" data="flash地址" width="400" height="300"\x3E\x3C/object\x3E' }
+                ]},
+
+                { group: '系统', items: [
+                    { label: '秒跳转',   insert: '\x3Cmeta http-equiv="refresh" content="0;url=跳转地址" /\x3E' },
+                    { label: '手机访问', insert: '\x3Cscript\x3E\nvar system = {};\nvar p = navigator.platform;\nvar u = navigator.userAgent;\nsystem.win = p.indexOf("Win") == 0;\nsystem.mac = p.indexOf("Mac") == 0;\nsystem.x11 = (p == "X11") || (p.indexOf("Linux") == 0);\nif (system.win || system.mac || system.x11) {\n  if (u.indexOf("Windows Phone") === -1) {\n    window.location.href = "/403.html";\n  }\n}\n\x3C/script\x3E' },
+                    { label: '3秒跳转',  insert: '\x3Cmeta http-equiv="refresh" content="3;url=跳转地址" /\x3E' },
+                    { label: '5秒跳转',  insert: '\x3Cmeta http-equiv="refresh" content="5;url=跳转地址" /\x3E' },
+                    { label: '字符集',   insert: '\x3Cmeta charset="UTF-8"\x3E' },
+                    { label: '关键词',   insert: '\x3Cmeta name="keywords" content="关键词1,关键词2"\x3E' },
+                    { label: '描述',     insert: '\x3Cmeta name="description" content="网页描述"\x3E' },
+                    { label: '作者',     insert: '\x3Cmeta name="author" content="作者名"\x3E' },
+                    { label: '视口',     insert: '\x3Cmeta name="viewport" content="width=device-width, initial-scale=1.0"\x3E' },
+                    { label: '禁止缓存', insert: '\x3Cmeta http-equiv="Cache-Control" content="no-cache"\x3E' },
+                    { label: 'IE兼容',   insert: '\x3Cmeta http-equiv="X-UA-Compatible" content="IE=edge"\x3E' },
+                    { label: '刷新页面', insert: '\x3Cmeta http-equiv="refresh" content="30"\x3E' },
+                    { label: '定时关闭', insert: '\x3Cscript\x3EsetTimeout(function(){ window.close(); }, 5000);\x3C/script\x3E' },
+                    { label: '打印页面', insert: '\x3Cscript\x3Efunction printPage(){ window.print(); }\x3C/script\x3E' },
+                    { label: '返回顶部', insert: '\x3Ca href="#" style="position:fixed;bottom:20px;right:20px;"\x3E↑顶部\x3C/a\x3E' },
+                    { label: '禁止复制', insert: '\x3Cbody oncopy="return false" oncut="return false"\x3E' },
+                    { label: '禁止拖拽', insert: '\x3Cbody ondragstart="return false"\x3E' },
+                    { label: '禁止F12',  insert: '\x3Cscript\x3Edocument.onkeydown=function(e){if(e.keyCode===123){return false;}}\x3C/script\x3E' },
+                    { label: '禁止选择', insert: '\x3Cbody onselectstart="return false"\x3E' },
+                    { label: '全屏打开', insert: '\x3Cscript\x3Efunction fullscreen(){var el=document.documentElement;el.requestFullscreen();}\x3C/script\x3E' },
+                    { label: '统计代码', insert: '\x3Cscript\x3E// 统计代码写在这里\n\x3C/script\x3E' }
+                ]},
+
+                { group: '其它', items: [
+                    { label: '新窗口链接', insert: '\x3Ca href="相关地址" target="_blank"\x3E写上要写的字\x3C/a\x3E' },
+                    { label: '去下划线链接', insert: '\x3Ca href="相关地址" style="text-decoration:none"\x3E写上你想写的字\x3C/a\x3E' },
+                    { label: '段落',     insert: '\x3Cp\x3E段落\x3C/p\x3E' },
+                    { label: '原始文字', insert: '\x3Cpre\x3E正文\x3C/pre\x3E' },
+                    { label: '预定宽度', insert: '\x3Cpre width="80"\x3E正文\x3C/pre\x3E' },
+                    { label: '邮箱链接', insert: '\x3Ca href="mailto:xxx@xxx.com"\x3E发邮件\x3C/a\x3E' },
+                    { label: '电话链接', insert: '\x3Ca href="tel:13800138000"\x3E打电话\x3C/a\x3E' },
+                    { label: '锚点',     insert: '\x3Ca name="top"\x3E\x3C/a\x3E' },
+                    { label: '跳到锚点', insert: '\x3Ca href="#top"\x3E回到顶部\x3C/a\x3E' },
+                    { label: '百度搜索', insert: '\x3Cform action="https://www.baidu.com/s" method="get"\x3E\x3Cinput type="text" name="wd"\x3E\x3Cinput type="submit" value="搜索"\x3E\x3C/form\x3E' },
+                    { label: '滚动文字', insert: '\x3Cmarquee direction="up" scrollamount="2"\x3E向上滚动\x3C/marquee\x3E' },
+                    { label: '闪烁文字', insert: '\x3Cblink\x3E闪烁文字\x3C/blink\x3E' },
+                    { label: '引用块',   insert: '\x3Cblockquote\x3E引用内容\x3C/blockquote\x3E' },
+                    { label: '版权符号', insert: '&copy; 2026 宏仔网络' },
+                    { label: '下载链接', insert: '\x3Ca href="文件地址" download\x3E点击下载\x3C/a\x3E' },
+                    { label: '外部JS',   insert: '\x3Cscript src="https://cdn.example.com/lib.js"\x3E\x3C/script\x3E' },
+                    { label: '外部CSS',  insert: '\x3Clink rel="stylesheet" href="https://cdn.example.com/style.css"\x3E' },
+                    { label: '微信分享', insert: '\x3Cmeta property="og:title" content="分享标题"\x3E\x3Cmeta property="og:image" content="图片地址"\x3E' },
+                    { label: 'favicon',  insert: '\x3Clink rel="icon" type="image/png" href="favicon.png"\x3E' },
+                    { label: '百度统计', insert: '\x3Cscript\x3Evar _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?xxx";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s);})();\x3C/script\x3E' }
+                ]}
+            ];
+
+            function insertAtCursor(text) {
+                var start = editor.selectionStart;
+                var end = editor.selectionEnd;
+                var before = editor.value.substring(0, start);
+                var after = editor.value.substring(end);
+                editor.value = before + text + after;
+                editor.selectionStart = editor.selectionEnd = start + text.length;
+                editor.focus();
+                if (autoRunEnabled) { updatePreview(); } else { updatePreview(true); }
+                showStatus('已插入：' + (text.length > 30 ? text.substring(0, 30) + '...' : text));
+            }
+
+            function buildSnippetPanel() {
+                SNIPPETS.forEach(function(group) {
+                    var row = document.createElement('div');
+                    row.className = 'snippet-row';
+
+                    var label = document.createElement('div');
+                    label.className = 'snippet-group-label';
+                    label.textContent = group.group;
+                    row.appendChild(label);
+
+                    var btns = document.createElement('div');
+                    btns.className = 'snippet-buttons';
+
+                    // 一键演示按钮
+                    var playBtn = document.createElement('button');
+                    playBtn.className = 'snippet-play-btn';
+                    playBtn.type = 'button';
+                    playBtn.textContent = '▶ 一键演示';
+                    playBtn.title = '点击演示本组所有按钮的效果（再点一次可暂停/继续）';
+                    playBtn.addEventListener('click', function() {
+                        togglePlayGroup(group.items, group.group, playBtn);
+                    });
+                    btns.appendChild(playBtn);
+
+                    group.items.forEach(function(item) {
+                        var btn = document.createElement('button');
+                        btn.className = 'snippet-btn';
+                        btn.type = 'button';
+                        btn.textContent = item.label;
+                        btn.title = item.getInsert ? item.getInsert() : item.insert;
+                        btn.addEventListener('click', function() {
+                            var text = item.getInsert ? item.getInsert() : item.insert;
+                            insertAtCursor(text);
+                        });
+                        btns.appendChild(btn);
+                    });
+
+                    row.appendChild(btns);
+                    snippetPanel.appendChild(row);
+                });
+            }
+
+            buildSnippetPanel();
+
+            // ================================================================
+            // 整理换行核心
+            // ================================================================
+            function formatHTML(code) {
+                if (!code || !code.trim()) return code;
+
+                var tokens = [];
+                var i = 0;
+                var len = code.length;
+
+                var voidElements = {
+                    area:1, base:1, br:1, col:1, embed:1, hr:1, img:1, input:1,
+                    link:1, meta:1, param:1, source:1, track:1, wbr:1
+                };
+
+                function findTagEnd(start) {
+                    var j = start + 1;
+                    var inQuote = false;
+                    var quoteChar = '';
+                    while (j < len) {
+                        var ch = code[j];
+                        if (inQuote) {
+                            if (ch === quoteChar) inQuote = false;
+                        } else {
+                            if (ch === '"' || ch === "'") { inQuote = true; quoteChar = ch; }
+                            else if (ch === '>') return j;
+                        }
+                        j++;
+                    }
+                    return len - 1;
+                }
+
+                function getTagName(tag) {
+                    var m = tag.match(/^\x3C\/?([a-zA-Z0-9-]+)/);
+                    return m ? m[1].toLowerCase() : '';
+                }
+
+                function isClosingTag(tag) { return /^\x3C\//.test(tag); }
+
+                function isSelfClosingTag(tag, name) {
+                    if (/\/>$/.test(tag)) return true;
+                    if (voidElements[name]) return true;
+                    return false;
+                }
+
+                while (i < len) {
+                    if (/\s/.test(code[i])) {
+                        var j = i;
+                        while (j < len && /\s/.test(code[j])) j++;
+                        tokens.push({ type: 'text', value: code.substring(i, j) });
+                        i = j;
+                        continue;
+                    }
+
+                    if (code[i] === '\x3C') {
+                        if (code.substr(i, 4) === '\x3C!--') {
+                            var end = code.indexOf('--\x3E', i);
+                            if (end !== -1) {
+                                tokens.push({ type: 'tag', value: code.substring(i, end + 3) });
+                                i = end + 3;
+                                continue;
+                            }
+                        }
+
+                        var lower = code.substring(i, Math.min(i + 10, len)).toLowerCase();
+                        if (lower.indexOf('\x3Cscript') === 0 || lower.indexOf('\x3Cstyle') === 0) {
+                            var tagEnd = findTagEnd(i);
+                            var openTag = code.substring(i, tagEnd + 1);
+                            var tagName = getTagName(openTag);
+                            tokens.push({ type: 'tag', value: openTag });
+                            i = tagEnd + 1;
+
+                            var closeTag = '\x3C/' + tagName + '\x3E';
+                            var closeIdx = code.toLowerCase().indexOf(closeTag.toLowerCase(), i);
+                            if (closeIdx !== -1) {
+                                var inner = code.substring(i, closeIdx);
+                                if (inner) tokens.push({ type: 'text', value: inner, raw: true });
+                                tokens.push({ type: 'tag', value: code.substring(closeIdx, closeIdx + closeTag.length) });
+                                i = closeIdx + closeTag.length;
+                            } else {
+                                tokens.push({ type: 'text', value: code.substring(i), raw: true });
+                                i = len;
+                            }
+                            continue;
+                        }
+
+                        var te = findTagEnd(i);
+                        var tag = code.substring(i, te + 1);
+                        tokens.push({ type: 'tag', value: tag });
+                        i = te + 1;
+                    } else {
+                        var j2 = i;
+                        while (j2 < len && code[j2] !== '\x3C') j2++;
+                        var text = code.substring(i, j2);
+                        if (text) tokens.push({ type: 'text', value: text });
+                        i = j2;
+                    }
+                }
+
+                var lines = [];
+                tokens.forEach(function(tk) {
+                    if (tk.type === 'tag') {
+                        lines.push({ type: 'tag', value: tk.value.trim() });
+                    } else {
+                        if (tk.raw) {
+                            var v = tk.value.replace(/^\s*\n/, '').replace(/\n\s*$/, '');
+                            if (v.trim()) lines.push({ type: 'raw', value: v });
+                        } else {
+                            var v2 = tk.value.trim();
+                            if (v2) lines.push({ type: 'text', value: v2 });
+                        }
+                    }
+                });
+
+                var indentStr = '  ';
+                var output = [];
+                var indent = 0;
+
+                function willIncreaseIndent(tag) {
+                    var name = getTagName(tag);
+                    if (!name) return false;
+                    if (isClosingTag(tag)) return false;
+                    if (isSelfClosingTag(tag, name)) return false;
+                    if (/^\x3C!/.test(tag)) return false;
+                    return true;
+                }
+
+                lines.forEach(function(line) {
+                    var val = line.value;
+                    if (line.type === 'tag') {
+                        var closing = isClosingTag(val);
+                        if (closing) indent = Math.max(0, indent - 1);
+                        if (/^\x3C!DOCTYPE/i.test(val) || /^\x3C!--/.test(val)) {
+                            output.push(val);
+                        } else {
+                            output.push(indentStr.repeat(indent) + val);
+                        }
+                        if (willIncreaseIndent(val)) indent++;
+                    } else if (line.type === 'raw') {
+                        val.split('\n').forEach(function(rl) {
+                            output.push(indentStr.repeat(indent) + rl);
+                        });
+                    } else {
+                        output.push(indentStr.repeat(indent) + val);
+                    }
+                });
+
+                return output.join('\n');
+            }
+
+            function handleFormat() {
+                var raw = editor.value;
+                if (!raw.trim()) { showStatus('编辑器为空，无需整理', true); return; }
+                if (raw.indexOf('buildSnippetPanel') !== -1 || raw.indexOf('const SNIPPETS') !== -1 || raw.indexOf('var SNIPPETS') !== -1) {
+                    showStatus('检测到工具自身代码，请清空后重新粘贴', true);
+                    return;
+                }
+                try {
+                    var formatted = formatHTML(raw);
+                    editor.value = formatted;
+                    updatePreview(true);
+                    showStatus('✨ 已整理换行（预览已同步）');
+                } catch (e) {
+                    console.error(e);
+                    showStatus('整理出错，请检查代码', true);
+                }
+            }
+
+            formatBtn.addEventListener('click', handleFormat);
+            clearBtn.addEventListener('click', clearEditor);
+            runBtn.addEventListener('click', runPreview);
+            newWindowBtn.addEventListener('click', openInNewWindow);
+            copyBtn.addEventListener('click', copyCode);
+            downloadBtn.addEventListener('click', downloadHTML);
+            refreshPreviewBtn.addEventListener('click', refreshPreview);
+
+            editor.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    runPreview();
+                }
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    var start = editor.selectionStart;
+                    var end = editor.selectionEnd;
+                    editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+                    editor.selectionStart = editor.selectionEnd = start + 2;
+                    if (autoRunEnabled) updatePreview();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+                    e.preventDefault();
+                    handleFormat();
+                }
+            });
+
+            updatePreview(true);
+        })();
+    </script>
+</body>
+</html>
