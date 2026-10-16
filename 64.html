@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宏仔Base64 编码解码工具</title>
-    <body background="https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg">
+    <title>宏仔Base64·32·16编码解码工具</title>
     <link rel="shortcut icon" type="image/ico" href="img/3.webp">
     <style>
         * {
@@ -17,7 +16,14 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             padding: 20px;
-            background-color: #f0f2f5;
+            min-height: 100vh;
+            /* 背景图直接设置，不做任何遮罩 */
+            background-image: url('https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f0f2f5; /* 图片加载失败时的后备色 */
         }
 
         .container {
@@ -27,11 +33,15 @@
         }
 
         .tool-box {
-            background: white;
+            /* 半透明白 + 毛玻璃，让内容可读又不遮挡背景 */
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         h1 {
@@ -39,6 +49,13 @@
             color: #ffffff;
             margin-bottom: 30px;
             font-size: 1.8rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            /* 用多层描边+阴影，让白色字在任何背景上都清晰 */
+            text-shadow: 
+                0 0 8px rgba(0, 0, 0, 0.9),
+                0 2px 6px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(0, 0, 0, 0.6);
         }
 
         .input-group {
@@ -52,8 +69,17 @@
             border: 1px solid #ddd;
             border-radius: 6px;
             resize: vertical;
-            font-family: monospace;
+            font-family: 'Fira Code', 'Consolas', monospace;
             font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+            background: #ffffff;
         }
 
         .button-group {
@@ -70,13 +96,36 @@
             background-color: #3498db;
             color: white;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.2s;
             flex: 1 1 160px;
+            font-weight: 500;
+            font-size: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            letter-spacing: 0.3px;
         }
 
         button:hover {
-            background-color: #2980b9;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
         }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.encode-base64 { background-color: #3498db; }
+        button.encode-base64:hover { background-color: #2980b9; }
+        
+        button.encode-base32 { background-color: #9b59b6; }
+        button.encode-base32:hover { background-color: #8e44ad; }
+        
+        button.encode-base16 { background-color: #e67e22; }
+        button.encode-base16:hover { background-color: #d35400; }
+        
+        button.format-btn { background-color: #2ecc71; }
+        button.format-btn:hover { background-color: #27ae60; }
+        
+        button.clear-btn { background-color: #e74c3c; }
+        button.clear-btn:hover { background-color: #c0392b; }
 
         .result-box {
             position: relative;
@@ -88,6 +137,16 @@
             top: 10px;
             padding: 5px 10px;
             background-color: #27ae60;
+            font-size: 13px;
+            flex: none;
+            width: auto;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .copy-btn:hover {
+            background-color: #219a52;
         }
 
         .toast {
@@ -95,20 +154,24 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.85);
             color: white;
             padding: 12px 24px;
-            border-radius: 4px;
+            border-radius: 30px;
             z-index: 1000;
             animation: fadeInOut 3s ease-in-out forwards;
             display: none;
+            font-weight: 500;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         @keyframes fadeInOut {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { opacity: 0; }
+            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
         }
 
         @media (max-width: 768px) {
@@ -125,12 +188,16 @@
                 margin-top: 10px;
                 width: 100%;
             }
+
+            h1 {
+                font-size: 1.4rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>宏仔Base64 编码/解码工具</h1>
+        <h1>宏仔Base64 / 32 / 16 编码解码工具</h1>
         
         <div class="tool-box">
             <div class="input-group">
@@ -138,10 +205,14 @@
             </div>
             
             <div class="button-group">
-                <button onclick="encode()">Base64 编码</button>
-                <button onclick="decode()">Base64 解码</button>
-                <button onclick="formatText()">美化文本</button>
-                <button onclick="clearAll()">清空内容</button>
+                <button class="encode-base64" onclick="encodeBase64()">Base64 编码</button>
+                <button class="encode-base64" onclick="decodeBase64()">Base64 解码</button>
+                <button class="encode-base32" onclick="encodeBase32()">Base32 编码</button>
+                <button class="encode-base32" onclick="decodeBase32()">Base32 解码</button>
+                <button class="encode-base16" onclick="encodeBase16()">Base16 编码</button>
+                <button class="encode-base16" onclick="decodeBase16()">Base16 解码</button>
+                <button class="format-btn" onclick="formatText()">美化文本</button>
+                <button class="clear-btn" onclick="clearAll()">清空内容</button>
             </div>
             
             <div class="result-box">
@@ -154,46 +225,63 @@
     <div class="toast" id="toast">已复制到剪贴板！</div>
 
     <script>
-        function encode() {
+        function showToast(message = '已复制到剪贴板！') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            toast.style.animation = 'none';
+            toast.offsetHeight;
+            toast.style.animation = 'fadeInOut 3s ease-in-out forwards';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(message) {
+            showToast('❌ ' + message);
+        }
+
+        function copyResult() {
+            const output = document.getElementById('output');
+            if (!output.value.trim()) {
+                showToast('没有可复制的内容');
+                return;
+            }
+            output.select();
+            output.setSelectionRange(0, 99999);
             try {
-                const input = document.getElementById('input').value;
-                const encoded = btoa(unescape(encodeURIComponent(input)));
-                document.getElementById('output').value = formatBase64(encoded);
-            } catch (error) {
-                alert("编码错误: " + error.message);
+                document.execCommand('copy');
+                showToast('✅ 已复制到剪贴板！');
+            } catch (err) {
+                showToast('❌ 复制失败，请手动复制');
             }
         }
 
-        function decode() {
-            try {
-                const input = document.getElementById('input').value.replace(/\s/g, '');
-                const decoded = decodeURIComponent(escape(atob(input)));
-                document.getElementById('output').value = decoded;
-            } catch (error) {
-                alert("解码错误: 请检查输入是否为有效的Base64格式");
-            }
-        }
-
-        function formatBase64(str) {
-            // 每76个字符添加换行
-            return str.replace(/(.{76})/g, "$1\n");
+        function clearAll() {
+            document.getElementById('input').value = '';
+            document.getElementById('output').value = '';
         }
 
         function formatText() {
             try {
                 const input = document.getElementById('input').value;
-                // 简单美化：自动缩进JSON
+                if (!input.trim()) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
                 if (isJSON(input)) {
                     document.getElementById('output').value = JSON.stringify(JSON.parse(input), null, 4);
                 } else {
-                    document.getElementById('output').value = input
+                    let formatted = input
                         .replace(/([{])/g, '$1\n')
                         .replace(/([}])/g, '\n$1')
                         .replace(/,/g, ',\n')
                         .replace(/;/g, ';\n');
+                    document.getElementById('output').value = formatted;
                 }
             } catch (error) {
-                alert("格式化错误: " + error.message);
+                showError("格式化错误: " + error.message);
             }
         }
 
@@ -206,31 +294,181 @@
             }
         }
 
-        function copyResult() {
-            const output = document.getElementById('output');
-            output.select();
+        function encodeBase64() {
             try {
-                document.execCommand('copy');
-                showToast();
-            } catch (err) {
-                showToast('复制失败，请手动复制');
+                const input = document.getElementById('input').value;
+                const encoded = btoa(unescape(encodeURIComponent(input)));
+                document.getElementById('output').value = formatBase64(encoded);
+            } catch (error) {
+                showError("编码错误: " + error.message);
             }
         }
 
-        function showToast(message = '已复制到剪贴板！') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.display = 'block';
-            
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+        function decodeBase64() {
+            try {
+                const input = document.getElementById('input').value.replace(/\s/g, '');
+                if (!input) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                const decoded = decodeURIComponent(escape(atob(input)));
+                document.getElementById('output').value = decoded;
+            } catch (error) {
+                showError("解码错误: 请检查输入是否为有效的Base64格式");
+            }
         }
 
-        function clearAll() {
-            document.getElementById('input').value = '';
-            document.getElementById('output').value = '';
+        function formatBase64(str) {
+            return str.replace(/(.{76})/g, "$1\n");
         }
+
+        const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        
+        function encodeBase32() {
+            try {
+                const input = document.getElementById('input').value;
+                if (!input) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                const bytes = new TextEncoder().encode(input);
+                let result = '';
+                let buffer = 0;
+                let bitsLeft = 0;
+                
+                for (let i = 0; i < bytes.length; i++) {
+                    buffer = (buffer << 8) | bytes[i];
+                    bitsLeft += 8;
+                    while (bitsLeft >= 5) {
+                        const index = (buffer >> (bitsLeft - 5)) & 0x1F;
+                        result += BASE32_ALPHABET[index];
+                        bitsLeft -= 5;
+                    }
+                }
+                
+                if (bitsLeft > 0) {
+                    const index = (buffer << (5 - bitsLeft)) & 0x1F;
+                    result += BASE32_ALPHABET[index];
+                }
+                
+                while (result.length % 8 !== 0) {
+                    result += '=';
+                }
+                
+                document.getElementById('output').value = result;
+            } catch (error) {
+                showError("Base32 编码错误: " + error.message);
+            }
+        }
+        
+        function decodeBase32() {
+            try {
+                let input = document.getElementById('input').value.trim().toUpperCase();
+                if (!input) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                
+                input = input.replace(/=+$/, '').replace(/\s/g, '');
+                if (input.length === 0) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                
+                for (let ch of input) {
+                    if (!BASE32_ALPHABET.includes(ch)) {
+                        throw new Error('包含非法字符: ' + ch);
+                    }
+                }
+                
+                let resultBytes = [];
+                let buffer = 0;
+                let bitsLeft = 0;
+                
+                for (let i = 0; i < input.length; i++) {
+                    const index = BASE32_ALPHABET.indexOf(input[i]);
+                    if (index === -1) throw new Error('非法字符');
+                    
+                    buffer = (buffer << 5) | index;
+                    bitsLeft += 5;
+                    
+                    if (bitsLeft >= 8) {
+                        const byte = (buffer >> (bitsLeft - 8)) & 0xFF;
+                        resultBytes.push(byte);
+                        bitsLeft -= 8;
+                    }
+                }
+                
+                const decoder = new TextDecoder('utf-8', { fatal: false });
+                const decoded = decoder.decode(new Uint8Array(resultBytes));
+                document.getElementById('output').value = decoded;
+            } catch (error) {
+                showError("Base32 解码错误: 请检查输入是否为有效的Base32格式 (" + error.message + ")");
+            }
+        }
+
+        function encodeBase16() {
+            try {
+                const input = document.getElementById('input').value;
+                if (!input) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                const bytes = new TextEncoder().encode(input);
+                let hex = '';
+                for (let b of bytes) {
+                    hex += b.toString(16).padStart(2, '0');
+                }
+                document.getElementById('output').value = hex;
+            } catch (error) {
+                showError("Base16 编码错误: " + error.message);
+            }
+        }
+        
+        function decodeBase16() {
+            try {
+                let input = document.getElementById('input').value;
+                if (!input.trim()) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                let hex = input.replace(/\s/g, '').toLowerCase();
+                if (hex.length === 0) {
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                if (hex.length % 2 !== 0) {
+                    throw new Error('十六进制字符串长度必须为偶数');
+                }
+                if (!/^[0-9a-f]+$/.test(hex)) {
+                    throw new Error('包含非十六进制字符');
+                }
+                
+                const bytes = [];
+                for (let i = 0; i < hex.length; i += 2) {
+                    const byte = parseInt(hex.substring(i, i + 2), 16);
+                    bytes.push(byte);
+                }
+                
+                const decoder = new TextDecoder('utf-8', { fatal: false });
+                const decoded = decoder.decode(new Uint8Array(bytes));
+                document.getElementById('output').value = decoded;
+            } catch (error) {
+                showError("Base16 解码错误: " + error.message);
+            }
+        }
+
+        window.encodeBase64 = encodeBase64;
+        window.decodeBase64 = decodeBase64;
+        window.encodeBase32 = encodeBase32;
+        window.decodeBase32 = decodeBase32;
+        window.encodeBase16 = encodeBase16;
+        window.decodeBase16 = decodeBase16;
+        window.formatText = formatText;
+        window.clearAll = clearAll;
+        window.copyResult = copyResult;
+
+        document.getElementById('toast').style.display = 'none';
     </script>
 </body>
 </html>
