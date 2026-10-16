@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宏仔Base64·32·16编码解码工具</title>
+    <title>宏仔Base64 · 32 · 16 编码解码工具</title>
     <link rel="shortcut icon" type="image/ico" href="img/3.webp">
     <style>
         * {
@@ -17,13 +17,12 @@
             line-height: 1.6;
             padding: 20px;
             min-height: 100vh;
-            /* 背景图直接设置，不做任何遮罩 */
             background-image: url('https://xcimg-new-1251632793.cos.ap-guangzhou.myqcloud.com/img/292177dd/20250605/o_1isvppnkf15gj1iqjc2j1kac3jg0.jpeg');
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
             background-repeat: no-repeat;
-            background-color: #f0f2f5; /* 图片加载失败时的后备色 */
+            background-color: #f0f2f5;
         }
 
         .container {
@@ -33,7 +32,6 @@
         }
 
         .tool-box {
-            /* 半透明白 + 毛玻璃，让内容可读又不遮挡背景 */
             background: rgba(255, 255, 255, 0.82);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -51,7 +49,6 @@
             font-size: 1.8rem;
             letter-spacing: 1px;
             font-weight: 700;
-            /* 用多层描边+阴影，让白色字在任何背景上都清晰 */
             text-shadow: 
                 0 0 8px rgba(0, 0, 0, 0.9),
                 0 2px 6px rgba(0, 0, 0, 0.8),
@@ -126,6 +123,29 @@
         
         button.clear-btn { background-color: #e74c3c; }
         button.clear-btn:hover { background-color: #c0392b; }
+
+        /* 一键编码/解码 专用醒目渐变样式 */
+        button.one-click-encode {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        button.one-click-encode:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.7);
+        }
+
+        button.one-click-decode {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+        }
+        button.one-click-decode:hover {
+            background: linear-gradient(135deg, #e07ce0 0%, #e0475b 100%);
+            box-shadow: 0 6px 16px rgba(245, 87, 108, 0.7);
+        }
 
         .result-box {
             position: relative;
@@ -205,6 +225,10 @@
             </div>
             
             <div class="button-group">
+                <button class="one-click-encode" onclick="oneClickEncode()">⚡ 一键编码 (64→32→16)</button>
+                <button class="one-click-decode" onclick="oneClickDecode()">🔓 一键解码 (16→32→64)</button>
+            </div>
+            <div class="button-group">
                 <button class="encode-base64" onclick="encodeBase64()">Base64 编码</button>
                 <button class="encode-base64" onclick="decodeBase64()">Base64 解码</button>
                 <button class="encode-base32" onclick="encodeBase32()">Base32 编码</button>
@@ -214,6 +238,7 @@
                 <button class="format-btn" onclick="formatText()">美化文本</button>
                 <button class="clear-btn" onclick="clearAll()">清空内容</button>
             </div>
+
             
             <div class="result-box">
                 <textarea id="output" readonly placeholder="结果将显示在这里..."></textarea>
@@ -294,10 +319,122 @@
             }
         }
 
+        // ===================== 基础编码/解码 核心函数 (供链式调用) =====================
+        
+        // Base64 编码 (输入字符串 -> Base64字符串)
+        function _base64Encode(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+        // Base64 解码 (输入Base64字符串 -> 原字符串)
+        function _base64Decode(str) {
+            // 移除空白字符
+            const clean = str.replace(/\s/g, '');
+            return decodeURIComponent(escape(atob(clean)));
+        }
+
+        // Base32 字符集
+        const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        
+        // Base32 编码 (输入字符串 -> Base32字符串)
+        function _base32Encode(str) {
+            const bytes = new TextEncoder().encode(str);
+            let result = '';
+            let buffer = 0;
+            let bitsLeft = 0;
+            
+            for (let i = 0; i < bytes.length; i++) {
+                buffer = (buffer << 8) | bytes[i];
+                bitsLeft += 8;
+                while (bitsLeft >= 5) {
+                    const index = (buffer >> (bitsLeft - 5)) & 0x1F;
+                    result += BASE32_ALPHABET[index];
+                    bitsLeft -= 5;
+                }
+            }
+            
+            if (bitsLeft > 0) {
+                const index = (buffer << (5 - bitsLeft)) & 0x1F;
+                result += BASE32_ALPHABET[index];
+            }
+            
+            // 填充到8的倍数
+            while (result.length % 8 !== 0) {
+                result += '=';
+            }
+            
+            return result;
+        }
+
+        // Base32 解码 (输入Base32字符串 -> 原字符串)
+        function _base32Decode(str) {
+            let input = str.trim().toUpperCase();
+            input = input.replace(/=+$/, '').replace(/\s/g, '');
+            if (input.length === 0) return '';
+            
+            // 校验非法字符
+            for (let ch of input) {
+                if (!BASE32_ALPHABET.includes(ch)) {
+                    throw new Error('Base32 非法字符: ' + ch);
+                }
+            }
+            
+            let resultBytes = [];
+            let buffer = 0;
+            let bitsLeft = 0;
+            
+            for (let i = 0; i < input.length; i++) {
+                const index = BASE32_ALPHABET.indexOf(input[i]);
+                buffer = (buffer << 5) | index;
+                bitsLeft += 5;
+                
+                if (bitsLeft >= 8) {
+                    const byte = (buffer >> (bitsLeft - 8)) & 0xFF;
+                    resultBytes.push(byte);
+                    bitsLeft -= 8;
+                }
+            }
+            
+            const decoder = new TextDecoder('utf-8', { fatal: false });
+            return decoder.decode(new Uint8Array(resultBytes));
+        }
+
+        // Base16 编码 (输入字符串 -> 十六进制字符串)
+        function _base16Encode(str) {
+            const bytes = new TextEncoder().encode(str);
+            let hex = '';
+            for (let b of bytes) {
+                hex += b.toString(16).padStart(2, '0');
+            }
+            return hex;
+        }
+
+        // Base16 解码 (输入十六进制字符串 -> 原字符串)
+        function _base16Decode(str) {
+            let hex = str.replace(/\s/g, '').toLowerCase();
+            if (hex.length === 0) return '';
+            if (hex.length % 2 !== 0) {
+                throw new Error('Base16 十六进制长度必须为偶数');
+            }
+            if (!/^[0-9a-f]+$/.test(hex)) {
+                throw new Error('Base16 包含非十六进制字符');
+            }
+            
+            const bytes = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes.push(parseInt(hex.substring(i, i + 2), 16));
+            }
+            
+            const decoder = new TextDecoder('utf-8', { fatal: false });
+            return decoder.decode(new Uint8Array(bytes));
+        }
+
+        // ===================== 单个按钮功能 =====================
+
         function encodeBase64() {
             try {
                 const input = document.getElementById('input').value;
-                const encoded = btoa(unescape(encodeURIComponent(input)));
+                if (!input) { document.getElementById('output').value = ''; return; }
+                const encoded = _base64Encode(input);
                 document.getElementById('output').value = formatBase64(encoded);
             } catch (error) {
                 showError("编码错误: " + error.message);
@@ -306,12 +443,9 @@
 
         function decodeBase64() {
             try {
-                const input = document.getElementById('input').value.replace(/\s/g, '');
-                if (!input) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                const decoded = decodeURIComponent(escape(atob(input)));
+                const input = document.getElementById('input').value;
+                if (!input.trim()) { document.getElementById('output').value = ''; return; }
+                const decoded = _base64Decode(input);
                 document.getElementById('output').value = decoded;
             } catch (error) {
                 showError("解码错误: 请检查输入是否为有效的Base64格式");
@@ -322,40 +456,11 @@
             return str.replace(/(.{76})/g, "$1\n");
         }
 
-        const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        
         function encodeBase32() {
             try {
                 const input = document.getElementById('input').value;
-                if (!input) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                const bytes = new TextEncoder().encode(input);
-                let result = '';
-                let buffer = 0;
-                let bitsLeft = 0;
-                
-                for (let i = 0; i < bytes.length; i++) {
-                    buffer = (buffer << 8) | bytes[i];
-                    bitsLeft += 8;
-                    while (bitsLeft >= 5) {
-                        const index = (buffer >> (bitsLeft - 5)) & 0x1F;
-                        result += BASE32_ALPHABET[index];
-                        bitsLeft -= 5;
-                    }
-                }
-                
-                if (bitsLeft > 0) {
-                    const index = (buffer << (5 - bitsLeft)) & 0x1F;
-                    result += BASE32_ALPHABET[index];
-                }
-                
-                while (result.length % 8 !== 0) {
-                    result += '=';
-                }
-                
-                document.getElementById('output').value = result;
+                if (!input) { document.getElementById('output').value = ''; return; }
+                document.getElementById('output').value = _base32Encode(input);
             } catch (error) {
                 showError("Base32 编码错误: " + error.message);
             }
@@ -363,63 +468,19 @@
         
         function decodeBase32() {
             try {
-                let input = document.getElementById('input').value.trim().toUpperCase();
-                if (!input) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                
-                input = input.replace(/=+$/, '').replace(/\s/g, '');
-                if (input.length === 0) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                
-                for (let ch of input) {
-                    if (!BASE32_ALPHABET.includes(ch)) {
-                        throw new Error('包含非法字符: ' + ch);
-                    }
-                }
-                
-                let resultBytes = [];
-                let buffer = 0;
-                let bitsLeft = 0;
-                
-                for (let i = 0; i < input.length; i++) {
-                    const index = BASE32_ALPHABET.indexOf(input[i]);
-                    if (index === -1) throw new Error('非法字符');
-                    
-                    buffer = (buffer << 5) | index;
-                    bitsLeft += 5;
-                    
-                    if (bitsLeft >= 8) {
-                        const byte = (buffer >> (bitsLeft - 8)) & 0xFF;
-                        resultBytes.push(byte);
-                        bitsLeft -= 8;
-                    }
-                }
-                
-                const decoder = new TextDecoder('utf-8', { fatal: false });
-                const decoded = decoder.decode(new Uint8Array(resultBytes));
-                document.getElementById('output').value = decoded;
+                const input = document.getElementById('input').value;
+                if (!input.trim()) { document.getElementById('output').value = ''; return; }
+                document.getElementById('output').value = _base32Decode(input);
             } catch (error) {
-                showError("Base32 解码错误: 请检查输入是否为有效的Base32格式 (" + error.message + ")");
+                showError("Base32 解码错误: " + error.message);
             }
         }
 
         function encodeBase16() {
             try {
                 const input = document.getElementById('input').value;
-                if (!input) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                const bytes = new TextEncoder().encode(input);
-                let hex = '';
-                for (let b of bytes) {
-                    hex += b.toString(16).padStart(2, '0');
-                }
-                document.getElementById('output').value = hex;
+                if (!input) { document.getElementById('output').value = ''; return; }
+                document.getElementById('output').value = _base16Encode(input);
             } catch (error) {
                 showError("Base16 编码错误: " + error.message);
             }
@@ -427,37 +488,66 @@
         
         function decodeBase16() {
             try {
-                let input = document.getElementById('input').value;
-                if (!input.trim()) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                let hex = input.replace(/\s/g, '').toLowerCase();
-                if (hex.length === 0) {
-                    document.getElementById('output').value = '';
-                    return;
-                }
-                if (hex.length % 2 !== 0) {
-                    throw new Error('十六进制字符串长度必须为偶数');
-                }
-                if (!/^[0-9a-f]+$/.test(hex)) {
-                    throw new Error('包含非十六进制字符');
-                }
-                
-                const bytes = [];
-                for (let i = 0; i < hex.length; i += 2) {
-                    const byte = parseInt(hex.substring(i, i + 2), 16);
-                    bytes.push(byte);
-                }
-                
-                const decoder = new TextDecoder('utf-8', { fatal: false });
-                const decoded = decoder.decode(new Uint8Array(bytes));
-                document.getElementById('output').value = decoded;
+                const input = document.getElementById('input').value;
+                if (!input.trim()) { document.getElementById('output').value = ''; return; }
+                document.getElementById('output').value = _base16Decode(input);
             } catch (error) {
                 showError("Base16 解码错误: " + error.message);
             }
         }
 
+        // ===================== 一键链式编码 / 解码 =====================
+        // 一键编码：原文 -> Base64 -> Base32 -> Base16
+        function oneClickEncode() {
+            try {
+                const input = document.getElementById('input').value;
+                if (!input.trim()) {
+                    showToast('请输入要编码的内容');
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                
+                // 链式：Base64 编码
+                const step1 = _base64Encode(input);
+                // 链式：Base32 编码（对Base64结果继续编码）
+                const step2 = _base32Encode(step1);
+                // 链式：Base16 编码（对Base32结果继续编码）
+                const finalResult = _base16Encode(step2);
+                
+                document.getElementById('output').value = finalResult;
+                showToast('✅ 一键编码完成 (64→32→16)');
+            } catch (error) {
+                showError("一键编码失败: " + error.message);
+            }
+        }
+
+        // 一键解码：Base16 -> Base32 -> Base64 -> 原文
+        function oneClickDecode() {
+            try {
+                const input = document.getElementById('input').value.trim();
+                if (!input) {
+                    showToast('请输入要解码的内容');
+                    document.getElementById('output').value = '';
+                    return;
+                }
+                
+                // 链式解码：先解Base16
+                const step1 = _base16Decode(input);
+                // 再解Base32
+                const step2 = _base32Decode(step1);
+                // 最后解Base64
+                const finalResult = _base64Decode(step2);
+                
+                document.getElementById('output').value = finalResult;
+                showToast('✅ 一键解码完成 (16→32→64)');
+            } catch (error) {
+                showError("一键解码失败: " + error.message + "，请确认输入是经过链式编码的内容");
+            }
+        }
+
+        // 挂载到全局
+        window.oneClickEncode = oneClickEncode;
+        window.oneClickDecode = oneClickDecode;
         window.encodeBase64 = encodeBase64;
         window.decodeBase64 = decodeBase64;
         window.encodeBase32 = encodeBase32;
