@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>ConsentText</key>
+<dict><key>default</key><string></string></dict>
+<key>HasRemovalPasscode</key>
+<false/>
+<key>PayloadContent</key>
+<array>
+<dict>
+<key>FullScreen</key>
+<true/>
+<key>Icon</key>
+<data>iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARzQklUCAgICHwIZIgAAAKISURBVGiB7Zm7jtNAFIaPkysU+AFQ8gQIoUuLREdFA+KRgAQN0tLSUaA8Bci0sBOQeABK5ERpFiRKlBCShG8m3jF2bCd2vHbX7P6NvVvP+fzPzh77mE0T4aUPiIxQZzRihJwWJhqjZQUm4WJg8YI2HmFhKQfxYACJFIVIA6hHGp6qR5uLw6aDwnIezY3RdoPIAbK5uSktOwD2FmSOgUVHyeLdE9WKDw8zsCk3SfjRZSt2PB3NQFQHHTIEwOEF8C6U6AADm4MpXgC/AB2tUJ3ByPCKM1sA+I3SPIHNldKpLcD3QKIdqT1MMvBk7iPZEgAA5UEiY/M8PcazkEVeJtnKrwD0mcfI2O4B+WLLdGIAWHmG2Ai9tqL+cX+o4kUdCwAceAAY/QH0sYABZAAivV+9A+yh9w7E6AtAuvzhHAe93UDWqk/06ANsTYxNezrFwLNmDfj/8i9i6S1B3CBG7wAZfQBOAPQp3gfIPpUTtHcZgIks3h7Kx0Kei16AWQDwzSTGLiRcYI9l20KBPyzCFpIPgHa3KGPM52mK5AEMj9Nj2kKE0Zyz4gH4neWlDzBwBMr32LtPsa2M02Mty3iHovU0eiZloi8wQM1R25SJvcDAYWohvsj8G7tWvCvQrgVRyR1FmRFmtFzQQhu8z7dSijMLwPwzxj0bfMEhzf/HNrXwwR0FcI7EBUhB0bmAFKLXB1HATgO8VlRSvDEVvDkbeAGshoB7h4G6K7N45x4D5FqO8SUKUF1h8ZeDngFwWbRq3OAEQfL2sxHxF9CW9wdMibADfPvykQGfBT8AbJ2uZ9hnZ7WQh73TCL0OjDGAyLP1dNKp9fx+c3vvB3kItoXj5QbjAAAAAElFTkSuQmCC</data>
+<key>IgnoreManifestScope</key>
+<true/>
+<key>IsRemovable</key>
+<true/>
+<key>Label</key>
+<string>微验</string>
+<key>PayloadDescription</key>
+<string>Configures settings for a web clip</string>
+<key>PayloadDisplayName</key>
+<string>Web Clip</string>
+<key>PayloadIdentifier</key>
+<string>com.apple.webClip.managed.5ed77160-c5bd-4140-a2d2-fb54b0753746</string>
+<key>PayloadType</key>
+<string>com.apple.webClip.managed</string>
+<key>PayloadUUID</key>
+<string>5ed77160-c5bd-4140-a2d2-fb54b0753746</string>
+<key>PayloadVersion</key>
+<integer>1</integer>
+<key>Precomposed</key>
+<true/>
+<key>URL</key>
+<string>https://llua.cn/admin/#/kmlist/addkm</string>
+</dict>
+</array>
+<key>PayloadDescription</key>
+<string></string>
+<key>PayloadDisplayName</key>
+<string>微验</string>
+<key>PayloadIdentifier</key>
+<string>mobileconfig.90787f07-e11d-4bed-a8b4-f7407a254943</string>
+<key>PayloadOrganization</key>
+<string>微验</string>
+<key>PayloadRemovalDisallowed</key>
+<false/>
+<key>PayloadType</key>
+<string>Configuration</string>
+<key>PayloadUUID</key>
+<string>90787f07-e11d-4bed-a8b4-f7407a254943</string>
+<key>PayloadVersion</key>
+<integer>1</integer>
+</dict>
+</plist>
