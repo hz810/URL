@@ -229,6 +229,10 @@
                 <button class="one-click-decode" onclick="oneClickDecode()">🔓 一键解码 (16→32→64)</button>
             </div>
             <div class="button-group">
+                <button class="encode-base64" onclick="encodeUtf8Obfuscate()">🔐 混淆加密 (atob+UTF8)</button>
+                <button class="encode-base64" onclick="decodeUtf8Obfuscate()">🔑 混淆解密 (atob+UTF8)</button>
+            </div>
+            <div class="button-group">
                 <button class="encode-base64" onclick="encodeBase64()">Base64 编码</button>
                 <button class="encode-base64" onclick="decodeBase64()">Base64 解码</button>
                 <button class="encode-base32" onclick="encodeBase32()">Base32 编码</button>
@@ -545,6 +549,66 @@
             }
         }
 
+        // ===================== JS 混淆加密 / 解密（atob + UTF-8 还原） =====================
+
+        // 字符串 -> UTF-8 字节串（Latin-1 表示的字节）
+        function _utf8Encode(str) {
+            return unescape(encodeURIComponent(str));
+        }
+        // UTF-8 字节串 -> 字符串（与原脚本 utf8_... 算法一致）
+        function _utf8Decode(str) {
+            var out = '', i = 0, len = str.length, c, char2, char3;
+            while (i < len) {
+                c = str.charCodeAt(i++);
+                switch (c >> 4) {
+                    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+                        out += str.charAt(i - 1); break;
+                    case 12: case 13:
+                        char2 = str.charCodeAt(i++);
+                        out += String.fromCharCode(((c & 31) << 6) | (char2 & 63)); break;
+                    case 14:
+                        char2 = str.charCodeAt(i++);
+                        char3 = str.charCodeAt(i++);
+                        out += String.fromCharCode(((c & 15) << 12) | ((char2 & 63) << 6) | (char3 & 63)); break;
+                }
+            }
+            return out;
+        }
+
+        // 混淆加密：明文 -> Base64(UTF-8) -> 套 atob + utf8 引导壳
+        function encodeUtf8Obfuscate() {
+            try {
+                const input = document.getElementById('input').value;
+                if (!input.trim()) { document.getElementById('output').value = ''; showToast('请输入要加密的内容'); return; }
+                const b64 = btoa(_utf8Encode(input));
+                const wrapped =
+`<script> var html = utf8_19545302026ade4c0240165(window.atob('${b64}'));
+document.write(html);
+function utf8_19545302026ade4c0240165(str){
+var out,i,len,c;var char2,char3;out='';len=str.length;i=0;while(i<len){c=str.charCodeAt(i++);switch(c>>4){case 0:case 1:case 2:case 3:case 4:case 5:case 6:case 7:out+=str.charAt(i-1);break;case 12:case 13:char2=str.charCodeAt(i++);out+=String.fromCharCode(((c&31)<<6)|(char2&63));break;case 14:char2=str.charCodeAt(i++);char3=str.charCodeAt(i++);out+=String.fromCharCode(((c&15)<<12)|((char2&63)<<6)|((char3&63)<<0));break}}return out;}<\/script>`;
+                document.getElementById('output').value = wrapped;
+                showToast('✅ 混淆加密完成');
+            } catch (error) {
+                showError("混淆加密失败: " + error.message);
+            }
+        }
+
+        // 混淆解密：自动提取 atob('...') 内容并还原明文
+        function decodeUtf8Obfuscate() {
+            try {
+                let txt = document.getElementById('input').value.trim();
+                if (!txt) { document.getElementById('output').value = ''; showToast('请输入要解密的内容'); return; }
+                const m = txt.match(/atob\(['"]([^'"]+)['"]\)/);
+                if (m) txt = m[1];
+                txt = txt.replace(/\s+/g, '');
+                const plain = _utf8Decode(atob(txt));
+                document.getElementById('output').value = plain;
+                showToast('✅ 混淆解密完成');
+            } catch (error) {
+                showError("混淆解密失败: " + error.message + "，请确认输入是 atob 混淆内容或 Base64");
+            }
+        }
+
         // 挂载到全局
         window.oneClickEncode = oneClickEncode;
         window.oneClickDecode = oneClickDecode;
@@ -557,6 +621,8 @@
         window.formatText = formatText;
         window.clearAll = clearAll;
         window.copyResult = copyResult;
+        window.encodeUtf8Obfuscate = encodeUtf8Obfuscate;
+        window.decodeUtf8Obfuscate = decodeUtf8Obfuscate;
 
         document.getElementById('toast').style.display = 'none';
     </script>
